@@ -1,0 +1,107 @@
+<!DOCTYPE = html>
+<html>
+<head>
+	<meta charset="UTF-8"></meta>
+	<title>Derivative calculator</title>
+  <script type="text/javascript" src="derivative_script.js"></script>
+</head>
+<body bgcolor=#C1FFC1>
+	<center>
+	  <table border="0px" style="text-align:center">
+			<thead>
+				<tr>
+					<th>Derivative calculator</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><p>&nbsp;</p></td>
+				</tr>
+				<tr>
+					<td>Formula</td>
+				</tr>
+				<tr>
+					<td><input type="text"
+				  id="formInput" /></td>
+				</tr>
+				<tr>
+					<td>Variable</td>
+				</tr>
+				<tr>
+					<td><input type="text"
+				  id="varInput" /></td>
+				</tr>
+				<tr>
+				  <td><input type="button"
+					value="Calculate"
+					onclick="main()"/></td>
+				</tr>
+				<tr>
+					<td><p>&nbsp;</p></td>
+				</tr>
+				<tr>
+					<td>
+					  <p id="result">..........</p>
+					</td>
+				</tr>
+		  </tbody>
+	  </table>
+		<p>-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-</p>
+		<table>
+			<thead>
+				<tr>
+					<th>How to use</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><p>&nbsp;</p></td>
+				</tr>
+				<tr>
+					<td>
+						<ul>
+							<li>Put a formula in the first line</li>
+							<li>Put the variable you want to derivate in the second line</li>
+							<li>Click on the "Calculate" button and see the derivative!</li>
+						</ul>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<p>-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-</p>
+		<table>
+			<thead>
+				<tr>
+					<th>Valid functions and variables</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><p>&nbsp;</p></td>
+				</tr>
+				<tr>
+					<td>
+						<ul>
+							<li>Variables can be an upper or lower case letter (excluding "e"), and can have subscript using "_", ex.: x_i</li>
+							<li>To use unary "-", use "~" or it will show an error message</li>
+							<li>You can use the constants e, pi and gr (golden ratio)</li>
+							<li>pow(a,b) = a^b (Obs.: sqrt not implemented yet! Use pow(a,1/2) to get sqrt(a))</li>
+							<li>log and ln were implemented too</li>
+							<li>Every trigonometric function were implemented (inverses, inverse functions and hiperbolic)</li>
+							<li>sum(i, n, a_j) = summation of a_i's, with j going from i to n (Obs.: don't try to derivate it in a_j!)</li>
+							<li>Maybe in the future, factorial can be implemented</li>
+							<li>Maybe in the future I'll try to take off some zeroes and ones from the result too :)</li>
+						</ul>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</center>
+<!--
+	 <fieldset>
+	 <label>Type your name: </label>
+	 </fieldset>
+	</form>
+-->
+</body>
+</html>
