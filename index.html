@@ -7,56 +7,31 @@
 </head>
 <body bgcolor=#C1FFC1>
 	<center>
-	  <table border="0px" style="text-align:center">
-			<thead>
-				<tr>
-					<th>Derivative calculator</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td><p>&nbsp;</p></td>
-				</tr>
-				<tr>
-					<td>Formula</td>
-				</tr>
-				<tr>
-					<td><input type="text"
-				  id="formInput" /></td>
-				</tr>
-				<tr>
-					<td>Variable</td>
-				</tr>
-				<tr>
-					<td><input type="text"
-				  id="varInput" /></td>
-				</tr>
-				<tr>
-				  <td><input type="button"
-					value="Calculate"
-					onclick="main()"/></td>
-				</tr>
-				<tr>
-					<td><p>&nbsp;</p></td>
-				</tr>
-				<tr>
-					<td>
-					  <p id="result">..........</p>
-					</td>
-				</tr>
-		  </tbody>
-	  </table>
+		<h2>Derivative calculator</h2>
+		<p>Formula</p>
+		<input type="text" id="formInput"/>
+		<p>Variable</p>
+		<input type="text" id="varInput"/>
+		<p></p>
+		<input id="calc" type="submit" value="Calculate" onclick="main()"/>
+		<script>
+		document.getElementById('formInput').onkeypress = function(e){
+				if(e.keyCode==13){
+						document.getElementById('calc').click();
+				}
+		}
+		document.getElementById('varInput').onkeypress = function(e){
+				if(e.keyCode==13){
+						document.getElementById('calc').click();
+				}
+		}
+		</script>
+	  <p id="result">..........</p>
+	  <p id="errorLog"></p>
 		<p>-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-</p>
+		<h2>How to use</h2>
 		<table>
-			<thead>
-				<tr>
-					<th>How to use</th>
-				</tr>
-			</thead>
 			<tbody>
-				<tr>
-					<td><p>&nbsp;</p></td>
-				</tr>
 				<tr>
 					<td>
 						<ul>
@@ -69,16 +44,9 @@
 			</tbody>
 		</table>
 		<p>-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-</p>
+		<h2>Valid functions and variables</h2>
 		<table>
-			<thead>
-				<tr>
-					<th>Valid functions and variables</th>
-				</tr>
-			</thead>
 			<tbody>
-				<tr>
-					<td><p>&nbsp;</p></td>
-				</tr>
 				<tr>
 					<td>
 						<ul>
@@ -90,7 +58,7 @@
 							<li>Every trigonometric function were implemented (inverses, inverse functions and hiperbolic)</li>
 							<li>sum(i, n, a_j) = summation of a_i's, with j going from i to n (Obs.: don't try to derivate it in a_j!)</li>
 							<li>Maybe in the future, factorial can be implemented</li>
-							<li>Maybe in the future I'll try to take off some zeroes and ones from the result too :)</li>
+							<li>You may have to do some algebraic manipulations to simplify the result :)</li>
 						</ul>
 					</td>
 				</tr>
