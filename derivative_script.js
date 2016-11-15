@@ -584,6 +584,7 @@ function derivateProduct (array) {
     print(ArraytoString(factors[0]) + " and");
     print(ArraytoString(factors[1]));
     var aux = factors[0].slice();
+    ret.push(new Token("Punctuation", "(", 0));
     ret.push(new Token("Operator", "+", 2));
     ret.push(new Token("Operator", "*", 2));
     ret.push.apply(ret, derivate(factors[0]));
@@ -591,6 +592,7 @@ function derivateProduct (array) {
     ret.push(new Token("Operator", "*", 2));
     ret.push.apply(ret, aux);
     ret.push.apply(ret, derivate(factors[1]));
+    ret.push(new Token("Punctuation", ")", 0));
     print(ArraytoString(ret));
     return ret;
 }
@@ -934,6 +936,157 @@ function decode (operator) {
     return 1;
 }
 
+function takeOffZeroes (array) {
+    var i = 0;
+    var ret = [];
+    print("Changed " + ArraytoString(array) + " to");
+    if (array[0].type == "Number" || array[0].type == "Variable" || array[0].type == "Constant") {
+        print(array[0].value);
+        return [array[0]];
+    }
+    else if (array[0].type == "Operator") {
+        if (array[0].value == "~") {
+            var factor = [];
+            var j = getFactor(array, 1) + 1;
+            i += 1;
+            while (i < j) {
+                factor.push(array[i]);
+                i += 1;
+            }
+            factor = takeOffZeroes(factor);
+            if (factor == 0) {
+                return 0;
+            }
+            if (factor.length == 1 && factor[0].value == 0) {
+                print("0");
+                ret = [new Token("Number", 0, 0)];
+            }
+            else {
+                ret.push(array[0]);
+                ret.push.apply(ret, factor);
+                print(ArraytoString(ret));
+            }
+        }
+        else {
+            i += 1;
+            var j = getFactor(array, i) + i;
+            var factors = [[], []];
+            var ret2 = []
+            while (i < j) {
+                factors[0].push(array[i]);
+                i += 1;
+            }
+            j = getFactor(array, i) + i;
+            while (i < j) {
+                factors[1].push(array[i]);
+                i += 1;
+            }
+            factors[0] = takeOffZeroes(factors[0]);
+            factors[1] = takeOffZeroes(factors[1]);
+            if (factors[0] == 0 || factors[1] == 0) {
+                return 0;
+            }
+            else if (((factors[0].length == 1 && factors[0][0].value == 0) || (factors[1].length == 1 && factors[1][0].value == 0)) && array[0].value == "*") {
+                print(0);
+                ret = [new Token("Number", 0, 0)];
+            }
+            else if (((factors[0].length == 1 && factors[0][0].value == 1) || (factors[1].length == 1 && factors[1][0].value == 1)) && array[0].value == "*") {
+                if (factors[0].length == 1 && factors[0][0].value == 1) {
+                    ret = factors[1];
+                    print(ArraytoString(factors[1]));
+                }
+                else {
+                    print(ArraytoString(factors[0]));
+                    ret = factors[0];
+                }
+            }
+            else if (factors[0].length == 1 && factors[0][0].value == 0 && array[0].value == "/") {
+                print(0);
+                ret = [new Token("Number", 0, 0)];
+            }
+            else if (factors[1].length == 1 && factors[1][0].value == 0 && array[0].value == "/") {
+                ret = 0;
+                print("Division by zero");
+            }
+            else if (factors[1].length == 1 && factors[1][0].value == 1 && array[0].value == "*") {
+                print(ArraytoString(factors[0]));
+                ret = factors[0];
+            }
+            else if (((factors[0].length == 1 && factors[0][0].type == "Number") || (factors[0].length == 2 && factors[0][1].type == "Number" && factors[0][0].value == "~")) && ((factors[1].length == 1 && factors[1][0].type == "Number") || (factors[1].length == 2 && factors[1][1].type == "Number" && factors[1][0].value == "~")) && (array[0].value == "+" || array[0].value == "-")) {
+                var aux1;
+                var aux2;
+                if (factors[0].length == 2 && factors[0][1].type == "Number" && factors[0][0].value == "~") {
+                    aux1 = -factors[0][1].value;
+                }
+                else if (factors[0].length == 1 && factors[0][0].type == "Number"){
+                    aux1 = factors[0][0].value;
+                }
+                if (factors[1].length == 2 && factors[1][1].type == "Number" && factors[1][0].value == "~") {
+                    aux2 = -factors[1][1].value;
+                }
+                else if (factors[1].length == 1 && factors[1][0].type == "Number"){
+                    aux2 = factors[1][0].value;
+                }
+                if (array[0].value == "+") {
+                  if (aux1 + aux2 < 0) {
+                      ret = [new Token("Operator", "~", 1), new Token("Number", Math.abs(aux1 + aux2), 0)];
+                      print(ArraytoString(ret));
+                  }
+                  else {
+                      ret = [new Token("Number", aux1 + aux2, 0)];
+                      print(ArraytoString(ret));
+                  }
+                }
+                else {
+                    if (aux1 - aux2 < 0) {
+                        ret = [new Token("Operator", "~", 1), new Token("Number", Math.abs(aux1 - aux2), 0)];
+                        print(ArraytoString(ret));
+                    }
+                    else {
+                        ret = [new Token("Number", aux1 - aux2, 0)];
+                        print(ArraytoString(ret));
+                    }
+                }
+            }
+            else {
+                ret.push(array[0]);
+                ret.push.apply(ret, factors[0]);
+                ret.push.apply(ret, factors[1]);
+                print(ArraytoString(ret));
+            }
+        }
+        //print(i);
+        return ret;
+    }
+    else if (array[0].type == "Function") {
+        var args = array[0].args;
+        //print(array[0].args);
+        var count = 0;
+        i = 2;
+        ret.push(array[0], array[1]);
+        while (count < args) {
+            var factor = [];
+            var j = getFactor(array, i) + i;
+            while (i < j) {
+                factor.push(array[i]);
+                i += 1;
+            }
+            factor = takeOffZeroes(factor);
+            ret.push.apply(ret, factor);
+            ret.push(array[i]);
+            i += 1;
+            count += 1;
+        }
+        //print(i);
+        print(ArraytoString(ret));
+        return ret;
+    }
+    else if (array[0].type == "Punctuation") {
+        print("(Something)");
+        return takeOffZeroes(array.splice(1, array.length - 2));
+    }
+}
+
 function toInfix (array, code) {
     var i = 0;
     var ret = [];
@@ -1021,6 +1174,9 @@ function toInfix (array, code) {
         //print(i);
         return ret;
     }
+    else if (array[0].type == "Punctuation") {
+        return toInfix(array.splice(1, array.length - 2));
+    }
 }
 
 function main () {
@@ -1041,6 +1197,7 @@ function main () {
             //print(ArraytoString(array));
             array = derivate(array);
             //print(ArraytoString(array));
+            array = takeOffZeroes(array);
             array = toInfix(array);
             //print(ArraytoString(array));
             var string = ArraytoString(array);
