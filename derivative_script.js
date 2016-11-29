@@ -227,7 +227,7 @@ function parse (string, den) {
         }
         else {
             log("Some error ocurred on parsing");
-            break;
+            return 0;
         }
         //print(array[array.length-1].value);
         total = i;
@@ -1218,6 +1218,17 @@ function toInfix (array, code) {
     }
 }
 
+function posPreparations (array) {
+    var i = 0;
+    while (i < array.length) {
+        if (array[i].value == "-" && array[i+1].value == "-") {
+            array[i].value = "+";
+            array.splice(i+1, 1);
+        }
+        i += 1;
+    }
+}
+
 function main () {
     var formInput = document.getElementById("formInput");
     var varInput = document.getElementById("varInput");
@@ -1239,9 +1250,9 @@ function main () {
             array = takeOffZeroes(array);
             array = toInfix(array);
             //print(ArraytoString(array));
+            posPreparations(array);
             var string = ArraytoString(array);
             nestedDiv.textContent = string;
-            log(" ");
         }
     }
     else {

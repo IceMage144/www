@@ -1,0 +1,34 @@
+@font-face {
+    font-family: bitOperator;
+    src: local('font/8bitOperatorPlus8-Regular.ttf'),
+         url('font/8bitOperatorPlus8-Regular.ttf');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: bitOperatorBold;
+    src: local('font/8bitOperatorPlus8-Bold.ttf'),
+         url('font/8bitOperatorPlus8-Bold.ttf');
+    font-weight: bold;
+    font-style: normal;
+}
+
+p {
+    font:20px bitOperator;
+    color: #00FF00;
+}
+
+li {
+    font:20px bitOperator;
+    color: #00FF00;
+}
+
+h2 {
+    font:32px bitOperatorBold;
+    color: #00FF00;
+}
+
+input {
+    font:20px bitOperator;
+}
