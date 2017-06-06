@@ -14,21 +14,145 @@
     font-style: normal;
 }
 
-p {
-    font:20px bitOperator;
-    color: #00FF00;
+/* ======================= Body classes ======================= */
+html {
+    height: 100%;
 }
 
-li {
-    font:20px bitOperator;
-    color: #00FF00;
+body {
+    background-color: #CCCCCC;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+p, ul, input, li{
+    font: 20px bitOperator;
+    line-height: 1.1;
 }
 
 h2 {
     font:32px bitOperatorBold;
-    color: #00FF00;
 }
 
-input {
-    font:20px bitOperator;
+ul.spaced > li {
+    margin: 0 0 10px 0;
+}
+
+a:link, a:visited {
+    color: blue;
+    text-decoration: none;
+}
+
+a:hover {
+    color: red;
+    text-decoration: underline;
+}
+
+.medium {
+    font-size: 23px;
+}
+
+.content {
+    flex: 1;
+    margin: 0 100px 0 100px;
+}
+
+#formInput {
+    width: 600px;
+}
+
+/* ======================= Header classes ======================= */
+#image {
+    width: 100%;
+    height: 250px;
+    background: #000000 url('moon2.jpg') center repeat;
+    background-size: auto;
+}
+
+ul.navbar {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333333;
+}
+
+ul.navbar li {
+    float: left;
+}
+
+ul.navbar li a {
+    display: block;
+    color: white;
+    padding: 14px 16px;
+    text-align: center;
+    text-decoration: none;
+}
+
+li.active {
+    background-color: #3b7fed
+}
+
+ul.navbar li:not(.active) a:hover {
+    background-color: #111111;
+}
+
+ul.navbar li ul {
+    position: absolute;
+    width: 170px;
+    background-color: #666666;
+    display: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul.navbar li:hover ul{
+    display: block;
+}
+
+ul.navbar li ul li {
+    background: #666666;
+    width: 100%;
+    display: block;
+}
+
+ul.navbar li ul li:hover {
+    background: #111111;
+}
+
+ul.navbar li ul li a {
+    display: block !important;
+}
+
+/* ======================= Footer classes ======================= */
+/*footer itself*/
+#footer {
+    position: static;
+    bottom: 0;
+    height: 50px;
+}
+
+/*footer lists*/
+ul.footer {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333333;
+}
+
+ul.footer li {
+    display: block;
+    color: white;
+    text-align: left;
+    padding: 14px 16px;
+    text-decoration: none;
+    float: left;
+}
+
+/*footer table*/
+table.footer {
+    width: 100%;
+    background-color: #333333;
 }
