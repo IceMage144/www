@@ -68,7 +68,7 @@ function swap (array, i, j) {
 }
 
 function print (bob) {
-    console.log(bob);
+    //console.log(bob);
 }
 
 function log (bob) {
@@ -175,7 +175,8 @@ function isVar (string, beg) {
     if (isAlpha(string[beg])) {
         if (string[beg+1] == "_" && isAlpha(string[beg+2]))
             return new funcRes(true, string.substring(beg, beg+3), 0);
-        return new funcRes(true, string[beg], 0);
+        else if (string[beg] != "e")
+            return new funcRes(true, string[beg], 0);
     }
     return new funcRes(false, "", 0);
 }
@@ -799,32 +800,26 @@ function posPreparations (string) {
 }
 
 function main () {
-    var formInput = document.getElementById("formInput");
-    var varInput = document.getElementById("varInput");
     var nestedDiv = document.getElementById("result");
     nestedDiv.textContent = ".";
     log("");
-    var formula = formInput.value;
-    var den = varInput.value;
+    var func = document.getElementById("formInput").value;
+    var den = document.getElementById("varInput").value;
     var res = isVar(den, 0);
-    if (res.bool) {
-        //try {
-            verifyParenthesis(formula);
-            var root = parse(formula, den);
+    if (res.bool && (den.length == 1 || (den.length == 3 && isAlpha(den[2])))) {
+        try {
+            verifyParenthesis(func);
+            var root = parse(func, den);
             var der = derivate(root);
-            //print(der);
             der = simplify(der);
-            //print("There we go");
-            //print(der);
             der = toInfix(der);
             der = posPreparations(der);
             nestedDiv.innerHTML = '`' + der + '`';
             MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
-            print(toInfix(der));
-        //}
-        //catch (err) {
-            //log(err);
-        //}
+        }
+        catch (err) {
+            log(err);
+        }
     }
     else
         log("Invalid variable");

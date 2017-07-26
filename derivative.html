@@ -20,6 +20,7 @@
 				<a>Web APPs</a>
 				<ul>
 					<li><a href="derivative.html">Derivative calculator</a></li>
+					<li><a href="snake.html">Snake</a></li>
 			    </ul>
 			</li>
 			<li>
@@ -46,17 +47,16 @@
 			<p></p>
 			<input id="calc" type="submit" value="Calculate" onclick="main()"/>
 			<script>
-				var a = function(e){
-					if(e.keyCode==13){
+				var a = function(e) {
+					if (e.keyCode == 13)
 						document.getElementById('calc').click();
-					}
 				}
 				document.getElementById('formInput').onkeypress = a
 				document.getElementById('varInput').onkeypress = a
 			</script>
 		  	<p id="result" style="font-size:30px">..........</p>
 		  	<p id="errorLog" style="font-size:30px"></p>
-			<p>-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-</p>
+			<p>-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-</p>
 			<h2>How to use</h2>
 			<table>
 				<tbody>
@@ -71,7 +71,7 @@
 					</tr>
 				</tbody>
 			</table>
-			<p>-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-</p>
+			<p>-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-</p>
 			<h2>Valid functions and variables</h2>
 			<table>
 				<tbody>
@@ -84,7 +84,7 @@
 								<li>Power was implemented as a^b and square root was implemeted as sqrt(a)</li>
 								<li>log and ln were implemented too</li>
 								<li>Every trigonometric function were implemented (inverses, inverse functions and hiperbolic)</li>
-								<li>sum(a, b, x_i) = summation of x_i's, with i going from a to b (Obs.: don't try to derivate it in a_i!)</li>
+								<li>sum(a, b, x_i) = summation of x_i's, with i going from a to b (a and b can be almost anything) (Obs.: don't try to derivate it in x_i!)</li>
 								<li>Factorial is not implemented</li>
 								<li>You may have to do some algebraic manipulations to simplify the result :)</li>
 							</ul>
@@ -101,9 +101,9 @@
 				<tr>
 					<td>
 						<ul class="footer">
-							<li><a href="https://github.com/IceMage144"><img src="github.png"></a></li>
-							<li><a href="https://www.facebook.com/joao.gabriel.564813"><img src="facebook.png"></a></li>
- 							<li><a href="mailto:joao.basi@usp.br"><img src="mail.png"></a></li>
+							<li><a href="https://github.com/IceMage144"><img src="assets/github.png"></a></li>
+							<li><a href="https://www.facebook.com/joao.gabriel.564813"><img src="assets/facebook.png"></a></li>
+ 							<li><a href="mailto:joao.basi@usp.br"><img src="assets/mail.png"></a></li>
 						</ul>
 					</td>
 				</tr>
