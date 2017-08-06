@@ -2,6 +2,7 @@ var dirs = [[-1, 0], [0, -1], [1, 0], [0, 1]];
 var height = 512;
 var width = 512;
 var pixelSize = 16;
+var pixelBorder = 1;
 
 function wall(x, y) {
     return x < 0 || y < 0 || x >= width/pixelSize || y >= height/pixelSize;
@@ -39,8 +40,10 @@ function Pixel(x, y, col) {
     this.y = y;
     this.col = col;
     this.draw = function() {
+        //Game.ctx.fillStyle = "black";
+        //Game.ctx.fillRect(this.x*pixelSize, this.y*pixelSize, pixelSize, pixelSize);
         Game.ctx.fillStyle = this.col;
-        Game.ctx.fillRect(this.x*pixelSize, this.y*pixelSize, pixelSize, pixelSize);
+        Game.ctx.fillRect(this.x*pixelSize+pixelBorder, this.y*pixelSize+pixelBorder, pixelSize-2*pixelBorder, pixelSize-2*pixelBorder);
     }
 }
 
