@@ -1,11 +1,26 @@
+const Wh = "rgb(255, 255, 255)"; // White
+const Me = "rgb(130, 130, 130)"; // Metal grey
+const Bl = "rgb(0, 0, 0)";       // Black
+const Op = "rgba(0, 0, 0, 0.5)"; // Opaque
+const Gd = "rgb(255, 215, 0)";   // Gold
+const Lg = "rgb(50, 205, 50)";   // Lime green
+const Ag = "rgb(100, 240, 110)"  // Apple green
+const Mb = "rgb(0, 0, 205)";     // Middle blue
+const Db = "rgb(30, 144, 255)";  // Dodger blue
+const Do = "rgb(153, 50, 204)";  // Dark orchid
+const Rd = "rgb(255, 0, 0)";     // Red
+const Or = "rgb(255, 165, 0)";   // Orange
+
 var dirs = [[-1, 0], [0, -1], [1, 0], [0, 1]];
-var height = 512;
-var width = 512;
 var pixelSize = 16;
+var pheight = 32;
+var pwidth = 32;
+var rheight = pheight*pixelSize;
+var rwidth = pwidth*pixelSize;
 var pixelBorder = 1;
 
 function wall(x, y) {
-    return x < 0 || y < 0 || x >= width/pixelSize || y >= height/pixelSize;
+    return x < 0 || y < 0 || x >= pwidth || y >= pheight;
 }
 
 function mouseInRect(x, y, width, height) {
@@ -91,6 +106,7 @@ var MyIH = {
     dir : 2,
     mousePos : [0, 0],
     keysDown : {},
+    PPressed : false,
     start : function() {
         this.dir = 2;
         addEventListener("keydown", function (e) {
@@ -101,7 +117,6 @@ var MyIH = {
             e.preventDefault();
         	delete MyIH.keysDown[e.keyCode];
         }, false);
-        setInterval(MyIH.update, 10);
         addEventListener('mousemove', function(e) {
             var rect = Game.canvas.getBoundingClientRect();
             MyIH.mousePos = [e.clientX - rect.left, e.clientY - rect.top];
@@ -109,6 +124,7 @@ var MyIH = {
         addEventListener("click", function(e) {
             Game.click();
         }, false);
+        setInterval(MyIH.update, 10);
     },
     update : function () {
         if (37 in MyIH.keysDown)
@@ -119,6 +135,14 @@ var MyIH = {
             MyIH.dir = 2;
         else if (40 in MyIH.keysDown)
             MyIH.dir = 3;
+        if (Game.ingame) {
+            if (80 in MyIH.keysDown && !this.PPressed) {
+                pause();
+                this.PPressed = true;
+            }
+            else if (!(80 in MyIH.keysDown) && this.PPressed)
+                this.PPressed = false;
+        }
     }
 }
 
@@ -127,18 +151,22 @@ var Game = {
     ctx : null,
     objs : {},
     interval : null,
-    dif : [300, 150, 50],
+    difs : [150, 100, 50],
+    dif : -1,
+    ingame : false,
+    paused : false,
     start : function(num) {
-        this.canvas.width = width;
-        this.canvas.height = height;
+        this.canvas.width = rwidth;
+        this.canvas.height = rheight;
         this.ctx = this.canvas.getContext("2d");
     },
     setDif : function(num) {
-        this.interval = setInterval(this.update, this.dif[num]);
+        this.dif = num;
+        this.interval = setInterval(this.update, this.difs[num]);
     },
     reset : function() {
         this.objs = {};
-        this.ctx.clearRect(0, 0, width, height);
+        this.ctx.clearRect(0, 0, rwidth, rheight);
     },
     stop : function() {
         clearInterval(this.interval);
@@ -154,7 +182,7 @@ var Game = {
         return this.objs[name];
     },
     update : async function() {
-        Game.ctx.clearRect(0, 0, width, height);
+        Game.ctx.clearRect(0, 0, rwidth, rheight);
         for (var k in Game.objs)
             await Game.objs[k].draw();
     },
@@ -166,6 +194,14 @@ var Game = {
                 Game.objs[k].push();
             }
         }
+    },
+    resize : function(num) {
+        pixelSize += num;
+        rwidth = pwidth*pixelSize;
+        rheight = pheight*pixelSize;
+        this.canvas.width = rwidth;
+        this.canvas.height = rheight;
+        this.update();
     }
 }
 
@@ -178,7 +214,7 @@ var Snake = {
         this.dir = 2;
         this.body = new Queue();
         for (var i = 5; i < 10; i++)
-            this.body.enqueue(new Pixel(i, 8, "blue"));
+            this.body.enqueue(new Pixel(i, 8, Mb));
     },
     move : function() {
         for (var i = 0; i < 4; i++) {
@@ -196,7 +232,7 @@ var Snake = {
                 Apple.reset();
             else
                 this.body.dequeue();
-            this.body.enqueue(new Pixel(next[0], next[1], "blue"));
+            this.body.enqueue(new Pixel(next[0], next[1], Mb));
         }
     },
     draw : function() {
@@ -223,9 +259,9 @@ var Apple = {
     },
     reset : function() {
         do {
-            this.x = Math.floor(Math.random()*width/pixelSize);
-            this.y = Math.floor(Math.random()*height/pixelSize);
-            this.sqr = new Pixel(this.x, this.y, "red");
+            this.x = Math.floor(Math.random()*pwidth);
+            this.y = Math.floor(Math.random()*pheight);
+            this.sqr = new Pixel(this.x, this.y, Rd);
         } while(Snake.inter(this.x, this.y));
         this.sqr.draw();
     },
@@ -253,26 +289,28 @@ function Text(x, y, text, col, font) {
     }
 }
 
-var Title = new Text(170, 110, "Snake", "black", "50px bitOperatorBold");
+var Title = new Text(170, 110, "Snake", Bl, "50px bitOperatorBold");
+var Paused = new Text((rwidth-200)/2, 110, "Paused", Bl, "50px bitOperator");
 var Score = new Text(30, 50, function() {
-    var score = Snake.body.size - 5;
+    var score = (Snake.body.size - 5)*100;
     return "Score: " + score.toString();
-}, "black", "30px bitOperator");
+}, Bl, "30px bitOperator");
 
-var Background = new Rectangle(0, 0, width, height, "white");
-var Dim = new Rectangle(0, 0, width, height, "rgba(0, 0, 0, 0.5)");
-var MenuBg = new Rectangle(0, 0, width, height, "rgb(100, 240, 110)");
+var Background = new Rectangle(0, 0, rwidth, rheight, Wh);
+var Dim = new Rectangle(0, 0, rwidth, rheight, Op);
+var MenuBg = new Rectangle(0, 0, rwidth, rheight, Ag);
 
-var Easy = new Button("assets/Easy.png", 176, 230, startGame, 0);
-var Medium = new Button("assets/Medium.png", 176, 300, startGame, 1);
-var Hard = new Button("assets/Hard.png", 176, 370, startGame, 2);
-var Restart = new Button("assets/Restart.png", 160, 160, showMenu);
+var Easy = new Button("assets/Easy.png", (rwidth-160)/2, 230, startGame, 0);
+var Medium = new Button("assets/Medium.png", (rwidth-160)/2, 300, startGame, 1);
+var Hard = new Button("assets/Hard.png", (rwidth-160)/2, 370, startGame, 2);
+var Restart = new Button("assets/Restart.png", (rwidth-192)/2, 160, showMenu);
 
 
 function startGame(dif) {
     MyIH.dir = 2;
     Game.reset();
     Game.setDif(dif);
+    Game.ingame = true;
     Game.add(Background, "Background");
     Game.add(Snake, "Snake");
     Game.add(Apple, "Apple");
@@ -284,6 +322,22 @@ function gameover() {
     Game.add(Restart, "B_Restart");
     Game.update();
     Game.stop();
+    Game.ingame = false;
+}
+
+function pause() {
+    if (!Game.paused) {
+        Game.add(Dim, "Dim");
+        Game.add(Paused, "Paused");
+        Game.stop();
+        Game.paused = true;
+    }
+    else {
+        Game.del("Dim");
+        Game.del("Paused");
+        Game.setDif(Game.dif);
+        Game.paused = false;
+    }
 }
 
 function showMenu() {

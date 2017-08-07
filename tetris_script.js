@@ -1,19 +1,20 @@
 const Wh = "rgb(255, 255, 255)"; // White
+const Me = "rgb(130, 130, 130)"; // Metal grey
 const Bl = "rgb(0, 0, 0)";       // Black
 const Op = "rgba(0, 0, 0, 0.5)"; // Opaque
 const Gd = "rgb(255, 215, 0)";   // Gold
 const Lg = "rgb(50, 205, 50)";   // Lime green
+const Ag = "rgb(100, 240, 110)"  // Apple green
 const Mb = "rgb(0, 0, 205)";     // Middle blue
-const Rd = "rgb(255, 0, 0)";     // Red
 const Db = "rgb(30, 144, 255)";  // Dodger blue
-const Or = "rgb(255, 165, 0)";   // Orange
 const Do = "rgb(153, 50, 204)";  // Dark orchid
-const Me = "rgb(130, 130, 130)"; // Metal grey
+const Rd = "rgb(255, 0, 0)";     // Red
+const Or = "rgb(255, 165, 0)";   // Orange
 
 var dirs = [[1, 0], [0, -1], [-1, 0], [0, 1]];
-var height = 448;
-var width = 416;
 var pixelSize = 16;
+var height = 28*pixelSize;
+var width = 26*pixelSize;
 var pixelBorder = 1;
 
 function wall(x, y) {
@@ -240,6 +241,7 @@ var MyIH = {
     */
     mousePos : [0, 0],
     keysDown : {},
+    PPressed : false,
     start : function() {
         this.dir = 2;
         addEventListener("keydown", function (e) {
@@ -266,11 +268,15 @@ var MyIH = {
             Cursor.nextDir = 0;
         else if (40 in MyIH.keysDown)
             Cursor.nextDir = 3;
-        else if (83 in MyIH.keysDown)
-            Game.stop();
-        if (80 in MyIH.keysDown) {
-            if (Game.ingame)
+        //else if (83 in MyIH.keysDown)
+        //    Game.stop();
+        if (Game.ingame) {
+            if (80 in MyIH.keysDown && !this.PPressed) {
                 pause();
+                this.PPressed = true;
+            }
+            else if (!(80 in MyIH.keysDown) && this.PPressed)
+                this.PPressed = false;
         }
     }
 }
@@ -452,13 +458,13 @@ var Gui = {
 }
 
 var Title = new Text((this.width-200)/2, 110, "Tetris", Bl, "50px bitOperatorBold");
-var Paused = new Text((this.width-200)/2, 110, "Paused", Bl, "50px bitOperator")
+var Paused = new Text((this.width-200)/2, 110, "Paused", Bl, "50px bitOperator");
 
 var Background = new Rectangle(0, 0, width, height, Me);
 var Dim = new Rectangle(0, 0, width, height, Op);
 var MenuBg = new Rectangle(0, 0, width, height, Me);
 
-var Easy = new Button("assets/Play.png", (this.width-160)/2, 230, startGame);
+var Play = new Button("assets/Play.png", (this.width-160)/2, 230, startGame);
 var Restart = new Button("assets/Restart.png", (this.width-192)/2, 160, showMenu);
 
 
@@ -499,9 +505,7 @@ function showMenu() {
     Game.reset();
     Game.add(MenuBg, "Background");
     Game.add(Title, "Title");
-    Game.add(Easy, "B_Easy");
-    Game.add(Medium, "B_Medium");
-    Game.add(Hard, "B_Hard");
+    Game.add(Play, "B_Play");
 }
 
 function main() {
