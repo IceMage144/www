@@ -330,8 +330,8 @@ var Background = new Rectangle(0, 0, rwidth, rheight, Me);
 var Dim = new Rectangle(0, 0, rwidth, rheight, Op);
 var MenuBg = new Rectangle(0, 0, rwidth, rheight, Me);
 
-var Play = new Button("assets/Play.png", (rwidth-160)/2, 230, Game, startGame);
-var Restart = new Button("assets/Restart.png", (rwidth-192)/2, 160, Game, showMenu);
+var Play = new Button("assets/Play.png", (rwidth-160)/2, 230, startGame);
+var Restart = new Button("assets/Restart.png", (rwidth-192)/2, 160, showMenu);
 
 
 function startGame() {

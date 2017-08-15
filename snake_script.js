@@ -135,10 +135,10 @@ var Background = new Rectangle(0, 0, rwidth, rheight, Wh);
 var Dim = new Rectangle(0, 0, rwidth, rheight, Op);
 var MenuBg = new Rectangle(0, 0, rwidth, rheight, Ag);
 
-var Easy = new Button("assets/Easy.png", (rwidth-160)/2, 230, Game, startGame, 0);
-var Medium = new Button("assets/Medium.png", (rwidth-160)/2, 300, Game, startGame, 1);
-var Hard = new Button("assets/Hard.png", (rwidth-160)/2, 370, Game, startGame, 2);
-var Restart = new Button("assets/Restart.png", (rwidth-192)/2, 160, Game, showMenu);
+var Easy = new Button("assets/Easy.png", (rwidth-160)/2, 230, startGame, 0);
+var Medium = new Button("assets/Medium.png", (rwidth-160)/2, 300, startGame, 1);
+var Hard = new Button("assets/Hard.png", (rwidth-160)/2, 370, startGame, 2);
+var Restart = new Button("assets/Restart.png", (rwidth-192)/2, 160, showMenu);
 
 function startGame(num) {
     Game.reset();

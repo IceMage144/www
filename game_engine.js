@@ -36,22 +36,21 @@ class Rectangle {
 }
 
 class Button {
-    constructor(src, x, y, canvas, call) {
+    constructor(src, x, y, call) {
         this.img = new Image();
         this.img.src = src;
         this.x = x;
         this.y = y;
         this.call = call;
         this.args = Array.prototype.slice.call(arguments);
-        this.args.splice(0, 5);
-        this.canvas = canvas;
+        this.args.splice(0, 4);
     }
     start() {}
     draw(ctx) {
         ctx.drawImage(this.img, this.x, this.y);
     }
-    push() {
-        if (mouseInRect(this.x, this.y, this.img.naturalWidth, this.img.naturalHeight, this.canvas))
+    push(canvas) {
+        if (mouseInRect(this.x, this.y, this.img.naturalWidth, this.img.naturalHeight, canvas))
             this.call.apply(this, this.args);
     }
 }
@@ -72,6 +71,19 @@ class Text {
             ctx.fillText(this.text, this.x, this.y);
         else
             ctx.fillText(this.text(), this.x, this.y);
+    }
+}
+
+class Sprite {
+    constructor(src, x, y) {
+        this.x = x;
+        this.y = y;
+        this.img = new Image();
+        this.img.src = src;
+    }
+    start() {}
+    draw(ctx) {
+        ctx.drawImage(this.img, this.x, this.y);
     }
 }
 
@@ -170,7 +182,7 @@ class Canvas {
             if (k[0] == "B" && k[1] == "_") {
                 if (!(k in this.objs))
                     continue;
-                this.objs[k].push();
+                this.objs[k].push(this);
             }
         }
     }
