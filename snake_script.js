@@ -60,7 +60,7 @@ var Snake = {
     newDir : 2,
     dir : 2,
     still : false,
-    start : function() {
+    start() {
         this.still = false;
         this.dir = 2;
         this.newDir = 2;
@@ -68,7 +68,7 @@ var Snake = {
         for (let i = 5; i < 10; i++)
             this.body.enqueue(new Pixel(i, 8, Mb));
     },
-    move : function() {
+    move() {
         for (let i = 0; i < 4; i++) {
             if (this.newDir == i && this.dir != (i+2)%4)
                 this.dir = this.newDir;
@@ -87,13 +87,13 @@ var Snake = {
             this.body.enqueue(new Pixel(next[0], next[1], Mb));
         }
     },
-    draw : function(ctx) {
+    draw(ctx) {
         if (!this.still)
             this.move();
         for (let i = 0; i < this.body.size; i++)
             this.body.vect[i].draw(ctx);
     },
-    inter : function(x, y) {
+    inter(x, y) {
         for (let i = 0; i < this.body.size; i++) {
             if (x == this.body.vect[i].x && y == this.body.vect[i].y)
                 return true;
@@ -106,10 +106,10 @@ var Apple = {
     x : 0,
     y : 0,
     sqr : null,
-    start : function() {
+    start() {
         this.reset();
     },
-    reset : function() {
+    reset() {
         do {
             this.x = Math.floor(Math.random()*pwidth);
             this.y = Math.floor(Math.random()*pheight);
@@ -117,7 +117,7 @@ var Apple = {
         } while(Snake.inter(this.x, this.y));
         //this.sqr.draw();
     },
-    draw : function(ctx) {
+    draw(ctx) {
         this.sqr.draw(ctx);
     }
 }
@@ -192,5 +192,17 @@ function main() {
     Game.bind(80, function() { pause(); }, KEY_DOWN);
     showMenu();
 }
+
+/*function resize(num) {
+    let div = document.getElementById("gamediv");
+    pixelSize += num;
+    rheight = pixelSize*pheight;
+    rwidth = pixelSize*pwidth;
+    div.height = rheight;
+    div.width = rwidth;
+    Game.canvas.height = rheight;
+    Game.canvas.width = rwidth;
+    Game.draw();
+}*/
 
 window.onload = main;

@@ -187,16 +187,16 @@ var Grid = {
     width : 10,
     matrix : [],
     bg : null,
-    start : function() {
+    start() {
         this.matrix = [];
         for (let i = 0; i < this.height; i++)
             this.matrix.push(newArray(this.width, null));
         this.bg = new Rectangle(this.x*pixelSize, this.y*pixelSize, this.width*pixelSize, this.height*pixelSize, Wh);
     },
-    add : function(pixel) {
+    add(pixel) {
         this.matrix[pixel.y - this.y][pixel.x - this.x] = pixel;
     },
-    draw : function(ctx) {
+    draw(ctx) {
         this.deleteFullRows();
         this.bg.draw(ctx);
         for (let i = 0; i < this.height; i++) {
@@ -206,7 +206,7 @@ var Grid = {
             }
         }
     },
-    deleteFullRows : function() {
+    deleteFullRows() {
         let del = 0;
         for (let i = 0; i < this.height; i++) {
             for (var j = 0; j < this.width; j++) {
@@ -227,7 +227,7 @@ var Grid = {
         }
         Gui.score += (del + del*del) * 10;
     },
-    collision : function(x, y) {
+    collision(x, y) {
         return !pointInRect(x, y, this.x, this.y, this.width-1, this.height-1) || this.matrix[y - this.y][x - this.x] != null;
     }
 }
@@ -238,7 +238,7 @@ var Cursor = {
     par : false,
     still : false,
     nextDir : -1,
-    start : function() {
+    start() {
         this.still = false;
         this.piece = Gui.getNext();
         this.shadow.start();
@@ -252,7 +252,7 @@ var Cursor = {
         }
         this.calc_shadow();
     },
-    draw : function(ctx) {
+    draw(ctx) {
         if (this.par)
             this.piece.move(0, 1);
         if (this.nextDir != -1) {
@@ -264,7 +264,7 @@ var Cursor = {
         this.shadow.draw(ctx);
         this.piece.draw(ctx);
     },
-    calc_shadow : function() {
+    calc_shadow() {
         for (var i = 1; i < 100; i++) {
             let brk = false;
             for (let j = 0; j < 4; j++) {
@@ -279,15 +279,15 @@ var Cursor = {
             this.shadow.pixels[j].y = this.piece.pixels[j].y + i - 1;
         }
     },
-    rotateL : function() {
+    rotateL() {
         if (!this.still)
             this.piece.rotateL();
     },
-    rotateR : function() {
+    rotateR() {
         if (!this.still)
             this.piece.rotateR();
     },
-    move : function(dx, dy) {
+    move(dx, dy) {
         if (!this.still)
             this.piece.move(dx, dy);
     }
@@ -298,7 +298,7 @@ var Gui = {
     text : null,
     next : null,
     bg : null,
-    start : function() {
+    start() {
         this.score = 0;
         this.next = new Piece(Math.floor(Math.random()*7));
         this.next.start();
@@ -307,14 +307,14 @@ var Gui = {
         }, Bl, "30px bitOperator");
         this.bg = new Rectangle(256, 64, 96, 96, Wh);
     },
-    getNext : function() {
+    getNext() {
         let ret = this.next;
         this.next = new Piece(Math.floor(Math.random()*7));
         this.next.start();
         ret.move(-12, -3);
         return ret;
     },
-    draw : function(ctx) {
+    draw(ctx) {
         this.text.draw(ctx);
         this.bg.draw(ctx);
         this.next.draw(ctx);

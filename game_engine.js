@@ -20,6 +20,10 @@ function mouseInRect(x, y, width, height, canvas) {
     return mp[0] >= x && mp[0] <= x + width && mp[1] >= y && mp[1] <= y + height;
 }
 
+function sq(x) {
+    return x*x;
+}
+
 class Rectangle {
     constructor(x, y, w, h, col) {
         this.x = x;
@@ -94,6 +98,9 @@ class Canvas {
     |  40 => down
     */
     constructor(id, width, height) {
+        let div = document.getElementById("gamediv");
+        div.width = width;
+        div.height = height;
         this.canvas = document.getElementById(id);
         this.canvas.width = width;
         this.canvas.height = height;
@@ -179,7 +186,7 @@ class Canvas {
     }
     click() {
         for (let k in this.objs) {
-            if (k[0] == "B" && k[1] == "_") {
+            if (k.indexOf("B_") != -1) {
                 if (!(k in this.objs))
                     continue;
                 this.objs[k].push(this);
