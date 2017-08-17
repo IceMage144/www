@@ -46,7 +46,7 @@ class Missile {
         if (dist < 16 || this.lastDist < dist)
             this.explode();
         else {
-            let factor = (this.type == 0)? 2 : 6;
+            let factor = (this.type == 0)? LevelManager.level/2 : 8;
             this.pixel.x += factor*this.dx;
             this.pixel.y += factor*this.dy;
         }
@@ -154,8 +154,10 @@ class Explosion {
             if (k.indexOf("_EMi") == 0) {
                 let pos = Game.objs[k].getPos();
                 let dist = sq(this.x - pos[0]) + sq(this.y - pos[1]);
-                if (dist <= sq(this.rad))
+                if (dist <= sq(this.rad)) {
                     Game.del(k);
+                    LevelManager.score += 30;
+                }
             }
         }
     }
@@ -190,11 +192,7 @@ var Field = {
             this.cities[i].draw(ctx);
     },
     checkGameOver() {
-        for (let i = 0; i < this.cities.length; i++) {
-            if (!this.cities[i].destroyed)
-                return false;
-        }
-        return true;
+        return (this.getAliveCities() == 0);
     },
     delNearestCity(x, y) {
         let mdist = 10000000;
@@ -208,8 +206,7 @@ var Field = {
         }
         if (idx == -1)
             return;
-        if (!this.cities[idx].destroyed)
-            this.cities[idx].destroyed = true;
+        this.cities[idx].destroyed = true;
         if (this.checkGameOver())
             gameover();
     },
@@ -230,10 +227,10 @@ var Field = {
             return null;
         let r = Math.floor(Math.random()*6);
         var city = this.cities[r];
-        while (city.destroyed) {
-            r = Math.floor(Math.random()*6);
-            city = this.cities[r];
-        }
+        //while (city.destroyed) {
+        //    r = Math.floor(Math.random()*6);
+        //    city = this.cities[r];
+        //}
         return city;
     },
     getTotalAmmo() {
@@ -305,9 +302,11 @@ var Planes = {
 var LevelManager = {
     level : 1,
     score : 0,
+    money : 0,
     start() {
         this.score = 0;
         this.level = 1;
+        this.money = 0;
     },
     draw(ctx) {
         if (this.enemyMissiles() == 0 && Planes.missiles == 0 && Field.getAliveCities() != 0) {
@@ -316,10 +315,8 @@ var LevelManager = {
                     Game.del(k);
             }
             this.level++;
-            Planes.missiles = (this.level + 1)*5;
-            let ammo = Field.getTotalAmmo();
-            this.score += (sq(ammo) + ammo)*10;
-            this.score += Field.getAliveCities()*100;
+            Planes.missiles = (Math.ceil(this.level/5) + 1)*5;
+            this.score += Field.getAliveCities()*100 + Field.getTotalAmmo()*10;
             Field.refillAmmo();
             MCount = 0;
         }
@@ -345,6 +342,9 @@ var Score = new Text(30, 50, function() {
 var Level = new Text(rwidth-200, 50, function() {
     return "Level " + LevelManager.level;
 }, Wh, "30px bitOperator");
+var Money = new Text(30, 100, function() {
+    return "Money: " + LevelManager.money;
+}, Wh, "30px bitOperator");
 
 var Background = new Rectangle(0, 0, rwidth, rheight, Bl);
 var Dim = new Rectangle(0, 0, rwidth, rheight, Op);
@@ -366,6 +366,7 @@ function startGame() {
     Game.add(Planes, "Planes");
     Game.add(Score, "Score");
     Game.add(Level, "Level");
+    Game.add(Money, "Money");
 }
 
 function gameover() {
@@ -386,7 +387,7 @@ function pause() {
     else {
         Game.del("Dim");
         Game.del("Paused");
-        Game.setDrawInterval(10);
+        Game.setDrawInterval(50);
         Game.paused = false;
     }
 }
@@ -410,7 +411,7 @@ function main() {
     Game.bind(39, function() { Cursor.next[0] = 0; }, KEY_UP);
     Game.bind(40, function() { Cursor.next[1] = 0; }, KEY_UP);
     Game.bind(80, function() { if (Game.ingame) pause(); }, KEY_DOWN);
-    Game.bind(90, function() { if (Game.ingame) Cursor.shoot(); }, KEY_DOWN);
+    Game.bind(90, function() { if (Game.ingame && !Game.paused) Cursor.shoot(); }, KEY_DOWN);
     showMenu();
     Game.bind(83, function() { Game.stop(); }, KEY_DOWN);
     Game.bind(75 , function() { for (let k in Game.objs) console.log(k); console.log("=======")}, KEY_DOWN);
