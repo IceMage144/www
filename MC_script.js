@@ -37,34 +37,53 @@ class Missile {
         this.type = type;
         this.pixel = new Rectangle(sx-2, sy-2, 4, 4, (type == 0)? Rd : Db);
         this.name = name;
+        this.lastDist = sq(sx - fx) + sq(sy - fy);
     }
     start() {}
     move() {
-        let dist = sq(this.pixel.x - this.fx) + sq(this.pixel.y - this.fy);
-        if (dist < 16)
+        let pos = this.getPos();
+        let dist = sq(pos[0] - this.fx) + sq(pos[1] - this.fy);
+        if (dist < 16 || this.lastDist < dist)
             this.explode();
         else {
-            let factor = (this.type + 1)*2;
+            let factor = (this.type == 0)? 2 : 6;
             this.pixel.x += factor*this.dx;
             this.pixel.y += factor*this.dy;
         }
+        this.lastDist = dist;
+    }
+    getPos() {
+        return [this.pixel.x+2, this.pixel.y+2];
     }
     explode() {
         Game.del(this.name);
+        let pos = this.getPos();
         if (this.type == 0)
-            Field.delNearestCity(this.pixel.x, this.pixel.y);
+            Field.delNearestCity(pos[0], pos[1]);
         else {
             let name = "_Ex" + MCount;
-            let ex = new Explosion(this.pixel.x+2, this.pixel.y+2, name);
+            let ex = new Explosion(pos[0], pos[1], name);
             Game.add(ex, name);
             MCount++;
         }
     }
+    trySplit() {
+        if (this.type == 0 && Math.floor(Math.random()*5000) == 0) {
+            let c = Field.getRandomCity();
+            let pos = this.getPos();
+            let name = "_EMi" + MCount;
+            let m = new Missile(pos[0], pos[1], c.x + 24, c.y + 32, 0, name);
+            Game.add(m, name);
+            MCount++;
+        }
+    }
     draw(ctx) {
+        let pos = this.getPos();
         this.move();
+        this.trySplit();
         ctx.beginPath();
         ctx.moveTo(this.sx, this.sy);
-        ctx.lineTo(this.pixel.x+2, this.pixel.y+2);
+        ctx.lineTo(pos[0], pos[1]);
         ctx.lineWidth = 1;
         ctx.strokeStyle = (this.type == 0)? Rd : Db;
         ctx.stroke();
@@ -77,6 +96,10 @@ class Base {
         this.x = x;
         this.y = y;
         this.dome = new Sprite("assets/Base.png", x, y);
+    }
+    start() {
+        let x = this.x;
+        let y = this.y;
         this.ammo = [];
         this.state = true;
         for (let i = 0; i < 3; i++)
@@ -86,7 +109,6 @@ class Base {
         for (let i = 0; i < 5; i++)
             this.ammo.push(new Sprite("assets/Missile.png", x + 8*i + 12, y + 12));
     }
-    start() {}
     draw(ctx) {
         this.dome.draw(ctx);
         for (let i = 0; i < this.ammo.length; i++)
@@ -130,8 +152,8 @@ class Explosion {
     destroyMissiles() {
         for (let k in Game.objs) {
             if (k.indexOf("_EMi") == 0) {
-                let mi = Game.objs[k];
-                let dist = sq(this.x - mi.pixel.x + 2) + sq(this.y - mi.pixel.y + 2);
+                let pos = Game.objs[k].getPos();
+                let dist = sq(this.x - pos[0]) + sq(this.y - pos[1]);
                 if (dist <= sq(this.rad))
                     Game.del(k);
             }
@@ -149,11 +171,16 @@ var Field = {
         this.bases = [];
         for (let i = 0; i < 3; i++)
             this.bases.push(new Base((240*i)+16, rheight-40));
+        this.refillAmmo();
         this.cities = []
         for (let i = 0; i < 3; i++)
             this.cities.push(new City(56*(i+1)+32, rheight-42));
         for (let i = 3; i < 6; i++)
             this.cities.push(new City(56*(i+1)+100, rheight-42));
+    },
+    refillAmmo() {
+        for (let i = 0; i < this.bases.length; i++)
+            this.bases[i].start();
     },
     draw(ctx) {
         this.floor.draw(ctx);
@@ -208,6 +235,18 @@ var Field = {
             city = this.cities[r];
         }
         return city;
+    },
+    getTotalAmmo() {
+        let b = this.bases;
+        return b[0].ammo.length + b[1].ammo.length + b[2].ammo.length;
+    },
+    getAliveCities() {
+        let count = 0;
+        for (let i = 0; i < this.cities.length; i++) {
+            if (!this.cities[i].destroyed)
+                count++;
+        }
+        return count;
     }
 }
 
@@ -216,7 +255,6 @@ var Cursor = {
     y : 0,
     sprite : null,
     next : [0, 0],
-    score : 0,
     start() {
         this.x = Math.floor(rwidth/2);
         this.y = Math.floor(rheight/2);
@@ -238,11 +276,16 @@ var Cursor = {
 }
 
 var Planes = {
+    counter : 0,
+    interval : 0,
+    missiles : 10,
     start() {
         this.counter = 0;
         this.interval = 0;
+        this.missiles = 10;
     },
     draw(ctx) {
+        if (this.missiles == 0) return;
         if (this.counter == this.interval) {
             let sx = Math.floor(Math.random()*rwidth);
             let dest = Field.getRandomCity();
@@ -252,9 +295,42 @@ var Planes = {
             this.counter = 0;
             this.interval = Math.floor(10 + Math.random()*6);
             MCount++;
+            this.missiles--;
         }
         else
             this.counter++;
+    }
+}
+
+var LevelManager = {
+    level : 1,
+    score : 0,
+    start() {
+        this.score = 0;
+        this.level = 1;
+    },
+    draw(ctx) {
+        if (this.enemyMissiles() == 0 && Planes.missiles == 0 && Field.getAliveCities() != 0) {
+            for (let k in Game.objs) {
+                if (k.indexOf("_FMi") == 0)
+                    Game.del(k);
+            }
+            this.level++;
+            Planes.missiles = (this.level + 1)*5;
+            let ammo = Field.getTotalAmmo();
+            this.score += (sq(ammo) + ammo)*10;
+            this.score += Field.getAliveCities()*100;
+            Field.refillAmmo();
+            MCount = 0;
+        }
+    },
+    enemyMissiles() {
+        let count = 0;
+        for (let k in Game.objs) {
+            if (k.indexOf("_EMi") == 0)
+                count++;
+        }
+        return count;
     }
 }
 
@@ -264,7 +340,10 @@ var Title1 = new Text((rwidth-210)/2, 110, "Missile", Wh, "50px bitOperatorBold"
 var Title2 = new Text((rwidth-260)/2, 160, "Command", Wh, "50px bitOperatorBold");
 var Paused = new Text((rwidth-200)/2, 110, "Paused", Wh, "50px bitOperator");
 var Score = new Text(30, 50, function() {
-    return "Score: " + Cursor.score;
+    return "Score: " + LevelManager.score;
+}, Wh, "30px bitOperator");
+var Level = new Text(rwidth-200, 50, function() {
+    return "Level " + LevelManager.level;
 }, Wh, "30px bitOperator");
 
 var Background = new Rectangle(0, 0, rwidth, rheight, Bl);
@@ -277,14 +356,16 @@ var Restart = new Button("assets/Restart.png", (rwidth-192)/2, 160, showMenu);
 function startGame() {
     MCount = 0;
     Game.reset();
-    Game.setDrawInterval(100);
+    Game.setDrawInterval(50);
     Game.ingame = true;
     // Game adds
     Game.add(Background, "Background");
+    Game.add(LevelManager, "LM");
     Game.add(Field, "Field");
     Game.add(Cursor, "Cursor");
     Game.add(Planes, "Planes");
     Game.add(Score, "Score");
+    Game.add(Level, "Level");
 }
 
 function gameover() {
@@ -331,8 +412,8 @@ function main() {
     Game.bind(80, function() { if (Game.ingame) pause(); }, KEY_DOWN);
     Game.bind(90, function() { if (Game.ingame) Cursor.shoot(); }, KEY_DOWN);
     showMenu();
-    //Game.bind(83, function() { Game.stop(); }, KEY_DOWN);
-    //Game.bind(75 , function() { for (let k in Game.objs) console.log(k); console.log("=======")}, KEY_DOWN);
+    Game.bind(83, function() { Game.stop(); }, KEY_DOWN);
+    Game.bind(75 , function() { for (let k in Game.objs) console.log(k); console.log("=======")}, KEY_DOWN);
 }
 
 window.onload = main;
