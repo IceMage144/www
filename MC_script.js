@@ -366,7 +366,7 @@ function startGame() {
     Game.add(Planes, "Planes");
     Game.add(Score, "Score");
     Game.add(Level, "Level");
-    //Game.add(Money, "Money");
+    Game.add(Money, "Money");
 }
 
 function gameover() {
@@ -411,10 +411,10 @@ function main() {
     Game.bind(39, function() { Cursor.next[0] = 0; }, KEY_UP);
     Game.bind(40, function() { Cursor.next[1] = 0; }, KEY_UP);
     Game.bind(80, function() { if (Game.ingame) pause(); }, KEY_DOWN);
-    Game.bind(90, function() { if (Game.ingame && !Game.paused) Cursor.shoot(); }, KEY_DOWN);
+    Game.bind(90, function() { if (Game.ingame && !Game.pause) Cursor.shoot(); }, KEY_DOWN);
     showMenu();
-    //Game.bind(83, function() { Game.stop(); }, KEY_DOWN);
-    //Game.bind(75 , function() { for (let k in Game.objs) console.log(k); console.log("=======")}, KEY_DOWN);
+    Game.bind(83, function() { Game.stop(); }, KEY_DOWN);
+    Game.bind(75 , function() { for (let k in Game.objs) console.log(k); console.log("=======")}, KEY_DOWN);
 }
 
 window.onload = main;

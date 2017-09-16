@@ -101,6 +101,8 @@ class Canvas {
         let div = document.getElementById("gamediv");
         div.width = width;
         div.height = height;
+        this.width = width;
+        this.height = height;
         this.canvas = document.getElementById(id);
         this.canvas.width = width;
         this.canvas.height = height;
@@ -143,7 +145,7 @@ class Canvas {
     }
     reset() {
         this.objs = {};
-        this.ctx.clearRect(0, 0, rwidth, rheight);
+        this.ctx.clearRect(0, 0, this.width, this.height);
     }
     stopDraw() {
         clearInterval(this.dInterval);
@@ -163,7 +165,7 @@ class Canvas {
         return this.objs[name];
     }
     async draw() {
-        this.ctx.clearRect(0, 0, rwidth, rheight);
+        this.ctx.clearRect(0, 0, this.width, this.height);
         for (let k in this.objs)
             await this.objs[k].draw(this.ctx);
     }
