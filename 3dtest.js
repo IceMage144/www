@@ -126,7 +126,9 @@ class Tile {
     constructor(pos) {
         // 0 => right; 1 => up; 2 => left; 3 => down
         this.neigh = [null, null, null, null]
+        this.walls = [null, null, null, null]
         this.pos = pos
+        this.coord = new THREE.Vector2(pos[1]*pixelSize - rwidth/2 + 0.5, - pos[0]*pixelSize + rheight/2 - 0.5)
     }
     start() {}
     draw(ctx) {
@@ -147,12 +149,25 @@ class Tile {
     }
 }
 
+class Wall {
+    constructor(x, y, ry) {
+        var geometry = new THREE.BoxBufferGeometry(1, 1, 0.1)
+        var material = new THREE.MeshLambertMaterial({ color : (ry == 0)? 0xffffff : 0xff0000 })
+        this.obj = new THREE.Mesh(geometry, material)
+        this.obj.rotation.x = Math.PI/2
+        this.obj.rotation.y = ry
+        this.obj.position.set(x, y, 0)
+        scene.add(this.obj)
+        this.plane = new THREE.Plane(new THREE.Vector3((ry)? 1 : 0, (ry)? 0 : 1, 0), -Math.pow((ry)? x : y, 2))
+    }
+}
+
 var Game = new Canvas("testDiv", rheight, rwidth, true)
 var Game2 = new Canvas("game", rwidth2, rheight2)
 var Background = new Rectangle(0, 0, rwidth2, rheight2, Wh)
 
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 35, 1, 0.1, 1000 );
+var camera = new THREE.PerspectiveCamera( 50, 1, 0.1, 1000 );
 
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( 512, 512 );
@@ -160,10 +175,10 @@ var div = document.getElementById("testDiv");
 div.appendChild( renderer.domElement );
 renderer.domElement.setAttribute("id", "view");
 
-//camera.position.z = 25
-camera.position.y = -25
+camera.position.z = 15
+//camera.position.y = -25
 //camera.position.z = 7
-camera.rotation.x = 6*Math.PI/12
+//camera.rotation.x = 5*Math.PI/12
 
 
 var Board = {
@@ -208,54 +223,64 @@ var Board = {
 
 var Ball = {
     start() {
-        let geometry = new THREE.SphereBufferGeometry(0.5, 16, 16)
+        this.rad = 0.3
+        let geometry = new THREE.SphereBufferGeometry(this.rad, 16, 16)
         let material = new THREE.MeshLambertMaterial({color: 0xff0000})
         this.obj = new THREE.Mesh(geometry, material)
-        this.obj.position.set(1, 1, 5)
+        this.obj.position.set(-rwidth/2+0.5, rheight/2-0.5, 0)
         scene.add(this.obj)
         this.pos = this.obj.position
         this.vel = new THREE.Vector3(0, 0, 0)
-        this.sphere = new THREE.Sphere(this.pos, 0.5)
+        this.sphere = new THREE.Sphere(this.pos, this.rad)
+        this.sphere.center = this.pos
         this.mem = true
+        this.act = Board.b[0][0]
+        this.vision = [[0, 0]]
+        for (var i = 0; i < 4; i++) {
+            if (this.act.neigh[i] != null)
+                this.vision.push(Board.b[0][0].neigh[i].pos)
+        }
     },
     update() {
-        //this.accel.z -= (this.mem)? 0.00001 : 0
-        this.vel.z -= (this.mem)? 0.001 : 0
+        /*this.vel.z -= (this.mem)? 0.001 : 0
         this.pos.add(this.vel)
         this.sphere.center.copy(this.pos)
-        if (this.sphere.intersectsBox(bb)) {
+        if (this.sphere.intersectsPlane(mainPlane)) {
             console.log("Gotcha")
             this.vel.reflect(mainPlane.normal)
             this.vel.multiplyScalar(0.7)
-            //this.vel.negate()
-            let vect = mainPlane.normal.clone()
-            vect.setLength(0.6)
+            vect = mainPlane.normal.clone()
+            vect.setLength(this.rad)
             vect.negate()
             vect.add(mainPlane.projectPoint(this.pos))
             this.pos.copy(vect)
+        }*/
+        for (val of this.vision) {
+            var t = Board.b[val[0]][val[1]]
+            if (t.coord.distanceToSquared(this.pos) < this.act.coord.distanceToSquared(this.pos)) {
+                this.act = t
+                this.vision = [val]
+                for (n of Board.b[val[0]][val[1]].neigh) {
+                    if (n != null)
+                        this.vision.push(n.pos)
+                }
+                break
+            }
         }
     }
 }
 
-var cube = new THREE.Group()
-
 var geometry = new THREE.BoxBufferGeometry(pwidth, pheight, 0.05);
 var material = new THREE.MeshLambertMaterial({ color: 0xffffff });
 var floor = new THREE.Mesh(geometry, material);
-geometry.computeBoundingBox()
-var bb = geometry.boundingBox
-bb.min.z = -1.025
-bb.max.z = -0.975
-//cube2.visible = false
-var mainPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), -1)
+//geometry.computeBoundingBox()
+//var bb = geometry.boundingBox
+//bb.min.z = -0.525
+//bb.max.z = -0.475
+floor.position.set(0, 0, -0.5)
+var mainPlane = new THREE.Plane(floor.position.clone().normalize(), -floor.position.lengthSq())
 
-cube.add(floor)
-cube.add(bb)
-cube.add(mainPlane);
-
-cube.position.set(0, 0, -1)
-mainPlane.set(cube.position, -cube.position.lengthSq())
-scene.add(cube)
+scene.add(floor)
 
 var light = new THREE.PointLight(0xffffff, 1, 100);
 light.position.copy(camera.position);
@@ -269,31 +294,34 @@ function createMaze() {
         for (var j = 0; j < pwidth; j++) {
             for (var k = 0; k < 4; k++) {
                 var modif = (k == 0 || k == 3)? 1 : 0
-                var condv = ((k%2 != 0 && !usedh[i+modif][j]) || (k%2 == 0 && !usedv[i][j+modif]))
-                if (Board.b[i][j].neigh[k] == null && condv) {
-                    geometry = new THREE.BoxBufferGeometry(1, 1, 0.1)
-                    material = new THREE.MeshLambertMaterial({ color : (k%2 == 0)? 0xffffff : 0xff0000 })
-                    wall = new THREE.Mesh(geometry, material)
-                    wall.rotation.x = Math.PI/2
-                    wall.rotation.y = ((k+1)%2)*Math.PI/2
+                var condv = (k%2 == 0 && !usedv[i][j+modif])
+                var condh = (k%2 != 0 && !usedh[i+modif][j])
+                if (Board.b[i][j].neigh[k] == null && (condv || condh)) {
                     let x = j*pixelSize - rwidth/2 + (k%2)*0.5 + ((k+1)%2)*modif
                     let y = i*pixelSize - rheight/2 + ((k+1)%2)*0.5 + (k%2)*modif
-                    wall.position.set(x, -y, 0.5)
-                    cube.add(wall)
+                    wall = new Wall(x, -y, ((k+1)%2)*Math.PI/2)
                     if (k%2 != 0)
                         usedh[i+modif][j] = wall
                     else
                         usedv[i][j+modif] = wall
                 }
+                if (k%2 == 0 && usedv[i][j+modif])
+                    Board.b[i][j].walls[k] = usedv[i][j+modif]
+                else if (k%2 != 0 && usedh[i+modif][j])
+                    Board.b[i][j].walls[k] = usedh[i+modif][j]
             }
         }
     }
 }
 
+var radius = 15
+var mradius = 10
+
 function adjustCube() {
-    cube.position.z = -Math.sqrt(1 - Math.pow(cube.position.x, 2) - Math.pow(cube.position.y, 2))
-    cube.lookAt(new THREE.Vector3(0, 0, 0))
-    mainPlane.set(cube.position, -cube.position.lengthSq())
+    camera.position.z = Math.sqrt(radius*radius - Math.pow(camera.position.x, 2) - Math.pow(camera.position.y, 2))
+    camera.lookAt(new THREE.Vector3())
+    //cube.lookAt(new THREE.Vector3(0, 0, 0))
+    //mainPlane.set(cube.position, -cube.position.lengthSq())
 }
 
 function main() {
@@ -302,40 +330,45 @@ function main() {
     Game2.add(Background, "Bg")
     Game2.add(Board, "Board")
     Ball.start()
-    var changeFactor = 0.01
-    Game.bind(90, () => { Ball.mem = !Ball.mem; Ball.vel.setScalar(0); /*Ball.accel.setScalar(0)*/}, KEY_DOWN)
+    var changeFactor = 0.2
+    Game.bind(90, () => { Ball.mem = !Ball.mem; Ball.vel.setScalar(0) }, KEY_DOWN)
     Game.bind(37, () => {
-        //if (cube.rotation.y >= Math.PI/4)
-        //    cube.rotation.y -= 0.1
-        if (Math.sqrt(Math.pow(cube.position.x + changeFactor, 2) + Math.pow(cube.position.y, 2)) <= 1) {
-            cube.position.x = Math.max(cube.position.x + changeFactor, -1)
+        //if (cube.rotation.y <= 3*Math.PI/4)
+        //    cube.rotation.y += 0.1
+        if (Math.sqrt(Math.pow(camera.position.x - changeFactor, 2) + Math.pow(camera.position.y, 2)) <= mradius) {
+            camera.position.x = Math.min(camera.position.x - changeFactor, radius)
             adjustCube()
         }
     }, KEY_PRESS)
     Game.bind(38, () => {
-        //if (cube.rotation.x >= -Math.PI/4)
-        //    cube.rotation.x -= 0.1
-        if (Math.sqrt(Math.pow(cube.position.x, 2) + Math.pow(cube.position.y - changeFactor, 2)) <= 1) {
-            cube.position.y = Math.max(cube.position.y - changeFactor, -1)
+        //if (cube.rotation.x <= Math.PI/4)
+        //    cube.rotation.x += 0.1
+        if (Math.sqrt(Math.pow(camera.position.x, 2) + Math.pow(camera.position.y + changeFactor, 2)) <= mradius) {
+            camera.position.y = Math.min(camera.position.y + changeFactor, radius)
             adjustCube()
         }
     }, KEY_PRESS)
     Game.bind(39, () => {
-        //if (cube.rotation.y <= 3*Math.PI/4)
-        //    cube.rotation.y += 0.1
-        if (Math.sqrt(Math.pow(cube.position.x - changeFactor, 2) + Math.pow(cube.position.y, 2)) <= 1) {
-            cube.position.x = Math.min(cube.position.x - changeFactor, 1)
+        //if (cube.rotation.y >= Math.PI/4)
+        //    cube.rotation.y -= 0.1
+        if (Math.sqrt(Math.pow(camera.position.x + changeFactor, 2) + Math.pow(camera.position.y, 2)) <= mradius) {
+            camera.position.x = Math.max(camera.position.x + changeFactor, -radius)
             adjustCube()
         }
     }, KEY_PRESS)
     Game.bind(40, () => {
-        //if (cube.rotation.x <= Math.PI/4)
-        //    cube.rotation.x += 0.1
-        if (Math.sqrt(Math.pow(cube.position.x, 2) + Math.pow(cube.position.y + changeFactor, 2)) <= 1) {
-            cube.position.y = Math.min(cube.position.y + changeFactor, 1)
+        //if (cube.rotation.x >= -Math.PI/4)
+        //    cube.rotation.x -= 0.1
+        if (Math.sqrt(Math.pow(camera.position.x, 2) + Math.pow(camera.position.y - changeFactor, 2)) <= mradius) {
+            camera.position.y = Math.max(camera.position.y - changeFactor, -radius)
             adjustCube()
         }
     }, KEY_PRESS)
+    Game.bind(65, () => { Ball.pos.x -= 0.01 }, KEY_PRESS)
+    Game.bind(83, () => { Ball.pos.y -= 0.01 }, KEY_PRESS)
+    Game.bind(68, () => { Ball.pos.x += 0.01 }, KEY_PRESS)
+    Game.bind(87, () => { Ball.pos.y += 0.01 }, KEY_PRESS)
+
 
     var animate = () => {
         requestAnimationFrame(animate);
@@ -344,7 +377,7 @@ function main() {
     }
 
     animate()
-    //createMaze()
+    createMaze()
 }
 
 window.onload = main;
