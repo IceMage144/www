@@ -97,18 +97,19 @@ class Canvas {
     |  39 => right
     |  40 => down
     */
-    constructor(id, width, height) {
-        let div = document.getElementById("gamediv");
-        div.width = width;
-        div.height = height;
-        this.width = width;
-        this.height = height;
+    constructor(id, width, height, onlyInput=false) {
         this.canvas = document.getElementById(id);
         this.canvas.width = width;
         this.canvas.height = height;
-        this.ctx = this.canvas.getContext("2d");
+        if (!onlyInput) {
+            let div = document.getElementById("gamediv");
+            div.width = width;
+            div.height = height;
+            this.ctx = this.canvas.getContext("2d");
+        }
+        this.width = width;
+        this.height = height;
         this.objs = {};
-        this.interval = null;
         this.ingame = false;
         this.paused = false;
         this.mousePos = [0, 0];
