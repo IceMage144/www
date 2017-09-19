@@ -76,6 +76,10 @@ function shuffle(array) {
     }
 }
 
+function sign(num) {
+    return (num >= 0)? 1 : -1
+}
+
 class RQ {
     constructor() {
         this.v = []
@@ -158,7 +162,14 @@ class Wall {
         this.obj.rotation.y = ry
         this.obj.position.set(x, y, 0)
         scene.add(this.obj)
-        this.plane = new THREE.Plane(new THREE.Vector3((ry)? 1 : 0, (ry)? 0 : 1, 0), -Math.pow((ry)? x : y, 2))
+        this.plane = new THREE.Plane(new THREE.Vector3((ry)? 1 : 0, (ry)? 0 : 1, 0), (ry)? -x : -y)
+        /*geometry = new THREE.PlaneGeometry(2, 2)
+        this.vPlane = new THREE.Mesh(geometry, material)
+        this.vPlane.rotation.x = Math.PI/2
+        this.vPlane.rotation.y = ry
+        this.vPlane.position.copy(this.plane.normal.clone().multiplyScalar(-this.plane.constant))
+        this.vPlane.visible = false
+        scene.add(this.vPlane)*/
     }
 }
 
@@ -180,6 +191,7 @@ camera.position.z = 15
 //camera.position.z = 7
 //camera.rotation.x = 5*Math.PI/12
 
+var floorp = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)
 
 var Board = {
     start() {
@@ -237,28 +249,42 @@ var Ball = {
         this.act = Board.b[0][0]
         this.vision = [[0, 0]]
         for (var i = 0; i < 4; i++) {
-            if (this.act.neigh[i] != null)
+            if (Board.b[0][0].neigh[i] != null)
                 this.vision.push(Board.b[0][0].neigh[i].pos)
         }
+        /*for (wall of Board.b[0][0].walls) {
+            if (wall != null)
+                wall.vPlane.visible = true
+        }*/
     },
     update() {
-        /*this.vel.z -= (this.mem)? 0.001 : 0
+        this.vel.add(floorp.projectPoint(camera.position.clone().negate().setLength(0.01)))
+        this.vel.setLength(Math.min(this.vel.length(), 0.04))
         this.pos.add(this.vel)
-        this.sphere.center.copy(this.pos)
-        if (this.sphere.intersectsPlane(mainPlane)) {
-            console.log("Gotcha")
-            this.vel.reflect(mainPlane.normal)
-            this.vel.multiplyScalar(0.7)
-            vect = mainPlane.normal.clone()
-            vect.setLength(this.rad)
-            vect.negate()
-            vect.add(mainPlane.projectPoint(this.pos))
-            this.pos.copy(vect)
-        }*/
+        for (wall of this.act.walls) {
+            if (wall != null && wall.plane.intersectsSphere(this.sphere)) {
+                //console.log("Gotcha", wall, this.act)
+                this.vel.reflect(wall.plane.normal)
+                this.vel.multiplyScalar(0.7)
+                vect = wall.plane.normal.clone().setLength(this.rad)
+                if (wall.plane.normal.dot(this.pos.clone().sub(wall.obj.position)) < 0)
+                    vect.negate()
+                vect.add(wall.plane.projectPoint(this.pos))
+                this.pos.copy(vect)
+            }
+        }
         for (val of this.vision) {
             var t = Board.b[val[0]][val[1]]
             if (t.coord.distanceToSquared(this.pos) < this.act.coord.distanceToSquared(this.pos)) {
+                /*for (wall of this.act.walls) {
+                    if (wall != null)
+                        wall.vPlane.visible = false
+                }*/
                 this.act = t
+                /*for (wall of this.act.walls) {
+                    if (wall != null)
+                        wall.vPlane.visible = true
+                }*/
                 this.vision = [val]
                 for (n of Board.b[val[0]][val[1]].neigh) {
                     if (n != null)
@@ -329,7 +355,6 @@ function main() {
     Game2.setDrawInterval(50)
     Game2.add(Background, "Bg")
     Game2.add(Board, "Board")
-    Ball.start()
     var changeFactor = 0.2
     Game.bind(90, () => { Ball.mem = !Ball.mem; Ball.vel.setScalar(0) }, KEY_DOWN)
     Game.bind(37, () => {
@@ -369,6 +394,8 @@ function main() {
     Game.bind(68, () => { Ball.pos.x += 0.01 }, KEY_PRESS)
     Game.bind(87, () => { Ball.pos.y += 0.01 }, KEY_PRESS)
 
+    createMaze()
+    Ball.start()
 
     var animate = () => {
         requestAnimationFrame(animate);
@@ -377,7 +404,6 @@ function main() {
     }
 
     animate()
-    createMaze()
 }
 
 window.onload = main;
