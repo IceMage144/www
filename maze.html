@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="UTF-8"></meta>
-	<title>Snake</title>
+	<title>3D Maze</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
@@ -19,6 +19,7 @@
                     <li><a href="snake.html">Snake</a></li>
 					<li><a href="tetris.html">Tetris</a></li>
 					<li><a href="missile_command.html">Missile command</a></li>
+					<li><a href="maze.html">3D Maze</a></li>
 			    </ul>
 			</li>
 			<li>
@@ -40,7 +41,8 @@
 			<!--<input type="button" value="+" onclick="resize(1)">
 			<input type="button" value="-" onclick="resize(-1)">-->
 			<div id="gamediv">
-	            <canvas id="game"></canvas>
+	            <!--<canvas id="game"></canvas>-->
+				<script type="text/javascript" src="three.js"></script>
 				<script type="text/javascript" src="game_engine.js"></script>
 	            <script type="text/javascript" src="maze_script.js"></script>
 			</div>
@@ -52,9 +54,8 @@
 					<tr>
 						<td>
 							<ul>
-								<li>Arrow keys: Move the snake</li>
-								<li>P: Pause</li>
-								<li>Eat apples to increase your score!!</li>
+								<li>Arrow keys: Move the maze</li>
+								<li>Bring the ball to the green spot!!</li>
 							</ul>
 						</td>
 					</tr>

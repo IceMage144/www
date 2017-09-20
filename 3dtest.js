@@ -20,7 +20,17 @@ var rwidth = pwidth*pixelSize
 var pixelSize2 = 32
 var rheight2 = pheight*pixelSize2
 var rwidth2 = pwidth*pixelSize2
-var limit = 30
+
+var radius = 15
+var mradius = 7
+var visionTheta = Math.PI/4
+var vsin = Math.sin(visionTheta)
+var vcos = Math.cos(visionTheta)
+
+var changeFactor = 0.2 // How much the camera will walk on the surface of the sphere
+var changeAngle = changeFactor/radius
+var csin = Math.sin(changeAngle)
+var ccos = Math.cos(changeAngle)
 
 function newArray(size, fill) {
     let arr = new Array(size);
@@ -154,49 +164,93 @@ class Tile {
 }
 
 class Wall {
-    constructor(x, y, ry) {
+    constructor(x, y, ry, plane) {
         var geometry = new THREE.BoxBufferGeometry(1, 1, 0.1)
-        var material = new THREE.MeshLambertMaterial({ color : (ry == 0)? 0xffffff : 0xff0000 })
+        var material = new THREE.MeshLambertMaterial({ color : Cr })
         this.obj = new THREE.Mesh(geometry, material)
         this.obj.rotation.x = Math.PI/2
         this.obj.rotation.y = ry
         this.obj.position.set(x, y, 0)
         scene.add(this.obj)
-        this.plane = new THREE.Plane(new THREE.Vector3((ry)? 1 : 0, (ry)? 0 : 1, 0), (ry)? -x : -y)
-        /*geometry = new THREE.PlaneGeometry(2, 2)
-        this.vPlane = new THREE.Mesh(geometry, material)
-        this.vPlane.rotation.x = Math.PI/2
-        this.vPlane.rotation.y = ry
-        this.vPlane.position.copy(this.plane.normal.clone().multiplyScalar(-this.plane.constant))
-        this.vPlane.visible = false
-        scene.add(this.vPlane)*/
+        this.plane = plane
     }
 }
 
-var Game = new Canvas("testDiv", rheight, rwidth, true)
-var Game2 = new Canvas("game", rwidth2, rheight2)
+var IH = new Canvas("testDiv", rheight, rwidth, true)
+var MazeView = new Canvas("game", rwidth2, rheight2)
 var Background = new Rectangle(0, 0, rwidth2, rheight2, Wh)
 
-var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 50, 1, 0.1, 1000 );
+var scene = new THREE.Scene()
+scene.background = new THREE.Color(0xffffff)
 
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize( 512, 512 );
-var div = document.getElementById("testDiv");
-div.appendChild( renderer.domElement );
-renderer.domElement.setAttribute("id", "view");
+var renderer = new THREE.WebGLRenderer()
+renderer.setSize(512, 512)
+var div = document.getElementById("testDiv")
+div.appendChild( renderer.domElement )
+renderer.domElement.setAttribute("id", "view")
 
-camera.position.z = 15
-//camera.position.y = -25
-//camera.position.z = 7
-//camera.rotation.x = 5*Math.PI/12
+var light = new THREE.PointLight(0xffffff, 1, 100)
+light.position.z = radius
+scene.add(light)
 
-var floorp = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)
+var Camera = {
+    start() {
+        this.obj = new THREE.PerspectiveCamera(50, 1, 0.1, 1000)
+        this.memPos = new THREE.Vector3()
+        this.adjust()
+    },
+    adjust() {
+        this.memPos.z = Math.sqrt(radius*radius - Math.pow(this.memPos.x, 2) - Math.pow(this.memPos.y, 2))
+        this.obj.position.x = this.memPos.x
+        this.obj.position.y = this.memPos.y*vcos - this.memPos.z*vsin
+        this.obj.position.z = this.memPos.y*vsin + this.memPos.z*vcos
+        this.obj.lookAt(new THREE.Vector3())
+    },
+    tryMoveRight() {
+        if (Math.sqrt(Math.pow(this.memPos.x*ccos + this.memPos.z*csin, 2) + Math.pow(this.memPos.y, 2)) <= mradius) {
+            this.memPos.x = this.memPos.x*ccos + this.memPos.z*csin
+            this.adjust()
+            return true
+        }
+        return false
+    },
+    tryMoveUp() {
+        if (Math.sqrt(Math.pow(this.memPos.x, 2) + Math.pow(this.memPos.y*ccos + this.memPos.z*csin, 2)) <= mradius) {
+            this.memPos.y = this.memPos.y*ccos + this.memPos.z*csin
+            this.adjust()
+            return true
+        }
+        return false
+    },
+    tryMoveLeft() {
+        if (Math.sqrt(Math.pow(this.memPos.x*ccos - this.memPos.z*csin, 2) + Math.pow(this.memPos.y, 2)) <= mradius) {
+            this.memPos.x = this.memPos.x*ccos - this.memPos.z*csin
+            this.adjust()
+            return true
+        }
+        return false
+    },
+    tryMoveDown() {
+        if (Math.sqrt(Math.pow(this.memPos.x, 2) + Math.pow(this.memPos.y*ccos - this.memPos.z*csin, 2)) <= mradius) {
+            this.memPos.y = this.memPos.y*ccos - this.memPos.z*csin
+            this.adjust()
+            return true
+        }
+        return false
+    }
+}
 
 var Board = {
     start() {
+        var geometry = new THREE.BoxBufferGeometry(pwidth, pheight, 0.05)
+        var material = new THREE.MeshLambertMaterial({ color: Me })
+        this.floor = new THREE.Mesh(geometry, material)
+        this.floor.position.set(0, 0, -0.5)
+        scene.add(this.floor)
+        this.mainPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)
         this.b = newArray(pheight, (i) => { return newArray(pwidth, (j) => { return new Tile([i, j]) }) })
         this.dfs()
+        this.createMaze()
         console.log("ready")
     },
     dfs() {
@@ -225,6 +279,36 @@ var Board = {
             }
         }
     },
+    createMaze() {
+        var wall;
+        var usedv = newArray(pheight, (i) => { return newArray(pwidth+1, (j) => { return null }) })
+        var usedh = newArray(pheight+1, (i) => { return newArray(pwidth, (j) => { return null }) })
+        var vplanes = newArray(pwidth+1, (i) => { return new THREE.Plane(new THREE.Vector3(1, 0, 0), rwidth/2 - i*pixelSize) })
+        var hplanes = newArray(pheight+1, (i) => { return new THREE.Plane(new THREE.Vector3(0, 1, 0), i*pixelSize - rheight/2) })
+        var count = 0
+        for (var i = 0; i < pheight; i++) {
+            for (var j = 0; j < pwidth; j++) {
+                for (var k = 0; k < 4; k++) {
+                    var modif = (k == 0 || k == 3)? 1 : 0
+                    var condv = (k%2 == 0 && !usedv[i][j+modif])
+                    var condh = (k%2 != 0 && !usedh[i+modif][j])
+                    if (this.b[i][j].neigh[k] == null && (condv || condh)) {
+                        let x = j*pixelSize - rwidth/2 + (k%2)*0.5 + ((k+1)%2)*modif
+                        let y = i*pixelSize - rheight/2 + ((k+1)%2)*0.5 + (k%2)*modif
+                        wall = new Wall(x, -y, ((k+1)%2)*Math.PI/2, (condv)? vplanes[j+modif] : hplanes[i+modif])
+                        if (k%2 != 0)
+                            usedh[i+modif][j] = wall
+                        else
+                            usedv[i][j+modif] = wall
+                    }
+                    if (k%2 == 0 && usedv[i][j+modif])
+                        this.b[i][j].walls[k] = usedv[i][j+modif]
+                    else if (k%2 != 0 && usedh[i+modif][j])
+                        this.b[i][j].walls[k] = usedh[i+modif][j]
+                }
+            }
+        }
+    },
     draw(ctx) {
         for (var i = 0; i < pheight; i++) {
             for (var j = 0; j < pwidth; j++)
@@ -237,7 +321,7 @@ var Ball = {
     start() {
         this.rad = 0.3
         let geometry = new THREE.SphereBufferGeometry(this.rad, 16, 16)
-        let material = new THREE.MeshLambertMaterial({color: 0xff0000})
+        let material = new THREE.MeshLambertMaterial({color: Db})
         this.obj = new THREE.Mesh(geometry, material)
         this.obj.position.set(-rwidth/2+0.5, rheight/2-0.5, 0)
         scene.add(this.obj)
@@ -252,21 +336,15 @@ var Ball = {
             if (Board.b[0][0].neigh[i] != null)
                 this.vision.push(Board.b[0][0].neigh[i].pos)
         }
-        /*for (wall of Board.b[0][0].walls) {
-            if (wall != null)
-                wall.vPlane.visible = true
-        }*/
     },
     update() {
-        this.vel.add(floorp.projectPoint(camera.position.clone().negate().setLength(0.01)))
+        this.vel.add(Board.mainPlane.projectPoint(Camera.memPos.clone().negate().setLength(0.01)))
         this.vel.setLength(Math.min(this.vel.length(), 0.04))
         this.pos.add(this.vel)
         for (wall of this.act.walls) {
             if (wall != null && wall.plane.intersectsSphere(this.sphere)) {
-                //console.log("Gotcha", wall, this.act)
-                this.vel.reflect(wall.plane.normal)
-                this.vel.multiplyScalar(0.7)
-                vect = wall.plane.normal.clone().setLength(this.rad)
+                this.vel.reflect(wall.plane.normal).multiplyScalar(0.7)
+                vect = wall.plane.normal.clone().setLength(this.rad + 0.01)
                 if (wall.plane.normal.dot(this.pos.clone().sub(wall.obj.position)) < 0)
                     vect.negate()
                 vect.add(wall.plane.projectPoint(this.pos))
@@ -276,15 +354,7 @@ var Ball = {
         for (val of this.vision) {
             var t = Board.b[val[0]][val[1]]
             if (t.coord.distanceToSquared(this.pos) < this.act.coord.distanceToSquared(this.pos)) {
-                /*for (wall of this.act.walls) {
-                    if (wall != null)
-                        wall.vPlane.visible = false
-                }*/
                 this.act = t
-                /*for (wall of this.act.walls) {
-                    if (wall != null)
-                        wall.vPlane.visible = true
-                }*/
                 this.vision = [val]
                 for (n of Board.b[val[0]][val[1]].neigh) {
                     if (n != null)
@@ -296,111 +366,43 @@ var Ball = {
     }
 }
 
-var geometry = new THREE.BoxBufferGeometry(pwidth, pheight, 0.05);
-var material = new THREE.MeshLambertMaterial({ color: 0xffffff });
-var floor = new THREE.Mesh(geometry, material);
-//geometry.computeBoundingBox()
-//var bb = geometry.boundingBox
-//bb.min.z = -0.525
-//bb.max.z = -0.475
-floor.position.set(0, 0, -0.5)
-var mainPlane = new THREE.Plane(floor.position.clone().normalize(), -floor.position.lengthSq())
-
-scene.add(floor)
-
-var light = new THREE.PointLight(0xffffff, 1, 100);
-light.position.copy(camera.position);
-scene.add(light);
-
-function createMaze() {
-    var wall;
-    var usedv = newArray(pheight, (i) => { return newArray(pwidth+1, (j) => { return null }) })
-    var usedh = newArray(pheight+1, (i) => { return newArray(pwidth, (j) => { return null }) })
-    for (var i = 0; i < pheight; i++) {
-        for (var j = 0; j < pwidth; j++) {
-            for (var k = 0; k < 4; k++) {
-                var modif = (k == 0 || k == 3)? 1 : 0
-                var condv = (k%2 == 0 && !usedv[i][j+modif])
-                var condh = (k%2 != 0 && !usedh[i+modif][j])
-                if (Board.b[i][j].neigh[k] == null && (condv || condh)) {
-                    let x = j*pixelSize - rwidth/2 + (k%2)*0.5 + ((k+1)%2)*modif
-                    let y = i*pixelSize - rheight/2 + ((k+1)%2)*0.5 + (k%2)*modif
-                    wall = new Wall(x, -y, ((k+1)%2)*Math.PI/2)
-                    if (k%2 != 0)
-                        usedh[i+modif][j] = wall
-                    else
-                        usedv[i][j+modif] = wall
-                }
-                if (k%2 == 0 && usedv[i][j+modif])
-                    Board.b[i][j].walls[k] = usedv[i][j+modif]
-                else if (k%2 != 0 && usedh[i+modif][j])
-                    Board.b[i][j].walls[k] = usedh[i+modif][j]
-            }
-        }
-    }
-}
-
-var radius = 15
-var mradius = 10
-
-function adjustCube() {
-    camera.position.z = Math.sqrt(radius*radius - Math.pow(camera.position.x, 2) - Math.pow(camera.position.y, 2))
-    camera.lookAt(new THREE.Vector3())
-    //cube.lookAt(new THREE.Vector3(0, 0, 0))
-    //mainPlane.set(cube.position, -cube.position.lengthSq())
-}
-
+/*
+| 37 => left
+| 38 => up
+| 39 => right
+| 40 => down
+| 90 => Z
+| 65 => A
+| 83 => S
+| 68 => D
+| 87 => W
+*/
 function main() {
-    Game.setInputInterval(10)
-    Game2.setDrawInterval(50)
-    Game2.add(Background, "Bg")
-    Game2.add(Board, "Board")
-    var changeFactor = 0.2
-    Game.bind(90, () => { Ball.mem = !Ball.mem; Ball.vel.setScalar(0) }, KEY_DOWN)
-    Game.bind(37, () => {
-        //if (cube.rotation.y <= 3*Math.PI/4)
-        //    cube.rotation.y += 0.1
-        if (Math.sqrt(Math.pow(camera.position.x - changeFactor, 2) + Math.pow(camera.position.y, 2)) <= mradius) {
-            camera.position.x = Math.min(camera.position.x - changeFactor, radius)
-            adjustCube()
-        }
-    }, KEY_PRESS)
-    Game.bind(38, () => {
-        //if (cube.rotation.x <= Math.PI/4)
-        //    cube.rotation.x += 0.1
-        if (Math.sqrt(Math.pow(camera.position.x, 2) + Math.pow(camera.position.y + changeFactor, 2)) <= mradius) {
-            camera.position.y = Math.min(camera.position.y + changeFactor, radius)
-            adjustCube()
-        }
-    }, KEY_PRESS)
-    Game.bind(39, () => {
-        //if (cube.rotation.y >= Math.PI/4)
-        //    cube.rotation.y -= 0.1
-        if (Math.sqrt(Math.pow(camera.position.x + changeFactor, 2) + Math.pow(camera.position.y, 2)) <= mradius) {
-            camera.position.x = Math.max(camera.position.x + changeFactor, -radius)
-            adjustCube()
-        }
-    }, KEY_PRESS)
-    Game.bind(40, () => {
-        //if (cube.rotation.x >= -Math.PI/4)
-        //    cube.rotation.x -= 0.1
-        if (Math.sqrt(Math.pow(camera.position.x, 2) + Math.pow(camera.position.y - changeFactor, 2)) <= mradius) {
-            camera.position.y = Math.max(camera.position.y - changeFactor, -radius)
-            adjustCube()
-        }
-    }, KEY_PRESS)
-    Game.bind(65, () => { Ball.pos.x -= 0.01 }, KEY_PRESS)
-    Game.bind(83, () => { Ball.pos.y -= 0.01 }, KEY_PRESS)
-    Game.bind(68, () => { Ball.pos.x += 0.01 }, KEY_PRESS)
-    Game.bind(87, () => { Ball.pos.y += 0.01 }, KEY_PRESS)
+    IH.setInputInterval(10)
+    MazeView.setDrawInterval(50)
+    MazeView.add(Background, "Bg")
+    MazeView.add(Board, "Board")
 
-    createMaze()
     Ball.start()
+    Camera.start()
+
+    /*IH.bind(90, () => {
+        Ball.mem = !Ball.mem
+        Ball.vel.setScalar(0)
+    }, KEY_DOWN)*/
+    IH.bind(37, () => { Camera.tryMoveLeft() || Camera.tryMoveUp() || Camera.tryMoveDown() }, KEY_PRESS)
+    IH.bind(38, () => { Camera.tryMoveUp() || Camera.tryMoveRight() || Camera.tryMoveLeft() }, KEY_PRESS)
+    IH.bind(39, () => { Camera.tryMoveRight() || Camera.tryMoveDown() || Camera.tryMoveUp() }, KEY_PRESS)
+    IH.bind(40, () => { Camera.tryMoveDown() || Camera.tryMoveLeft() || Camera.tryMoveRight() }, KEY_PRESS)
+    /*IH.bind(65, () => { Ball.pos.x -= 0.01 }, KEY_PRESS)
+    IH.bind(83, () => { Ball.pos.y -= 0.01 }, KEY_PRESS)
+    IH.bind(68, () => { Ball.pos.x += 0.01 }, KEY_PRESS)
+    IH.bind(87, () => { Ball.pos.y += 0.01 }, KEY_PRESS)*/
 
     var animate = () => {
         requestAnimationFrame(animate);
         Ball.update()
-        renderer.render(scene, camera);
+        renderer.render(scene, Camera.obj);
     }
 
     animate()
