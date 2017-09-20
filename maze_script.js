@@ -149,7 +149,7 @@ class Tile {
 class Wall {
     constructor(x, y, ry, plane) {
         var geometry = new THREE.BoxBufferGeometry(1, 1, 0.1)
-        var material = new THREE.MeshLambertMaterial({ color : Cr })
+        var material = new THREE.MeshToonMaterial({ color : "rgb(220, 30, 30)" })
         this.obj = new THREE.Mesh(geometry, material)
         this.obj.rotation.x = Math.PI/2
         this.obj.rotation.y = ry
@@ -290,7 +290,7 @@ var Board = {
             }
         }
         var geometry = new THREE.BoxBufferGeometry(1, 1, 0.1)
-        var material = new THREE.MeshLambertMaterial({ color : Lg })
+        var material = new THREE.MeshToonMaterial({ color : Lg })
         var end = new THREE.Mesh(geometry, material)
         end.position.set(rwidth/2-0.5, -rheight/2+0.5, -0.5)
         scene.add(end)
@@ -301,7 +301,7 @@ var Ball = {
     start() {
         this.rad = 0.3
         let geometry = new THREE.SphereBufferGeometry(this.rad, 16, 16)
-        let material = new THREE.MeshLambertMaterial({color: Db})
+        let material = new THREE.MeshToonMaterial({color: Db})
         this.obj = new THREE.Mesh(geometry, material)
         this.obj.position.set(-rwidth/2+0.5, rheight/2-0.5, 0)
         scene.add(this.obj)

@@ -3,6 +3,7 @@ const Wh = "rgb(255, 255, 255)"   // White
 const Me = "rgb(130, 130, 130)"   // Metal grey
 const Bl = "rgb(0,   0,   0  )"   // Black
 const Gd = "rgb(255, 215, 0  )"   // Gold
+const Sa = "rgb(255, 222, 82 )"   // Sand
 const Pr = "rgb(238, 232, 170)"   // Pale Golden rod
 const Lg = "rgb(50,  205, 50 )"   // Lime green
 const Ag = "rgb(100, 240, 110)"   // Apple green
@@ -14,6 +15,7 @@ const Do = "rgb(153, 50,  204)"   // Dark orchid
 const Pv = "rgb(219, 112, 147)"   // Pale Violet red
 const Rd = "rgb(255, 0,   0  )"   // Red
 const Cr = "rgb(220, 20,  60 )"   // Crimson
+const Fb = "rgb(178, 34,  34 )"   // Fire brick
 const Or = "rgb(255, 165, 0  )"   // Orange
 
 const KEY_UP = 0;

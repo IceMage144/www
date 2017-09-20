@@ -1,5 +1,3 @@
-const Sa = "rgb(255, 222, 82)";
-
 var dirs = [[1, 0], [0, -1], [-1, 0], [0, 1]];
 var pixelSize = 16;
 var pixelBorder = 1;
