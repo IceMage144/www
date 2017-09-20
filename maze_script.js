@@ -156,6 +156,8 @@ class Wall {
         this.obj.position.set(x, y, 0)
         scene.add(this.obj)
         this.plane = plane
+        this.box = new THREE.Box3()
+        this.box.setFromObject(this.obj)
     }
 }
 
@@ -319,17 +321,27 @@ var Ball = {
     },
     update() {
         this.vel.add(Board.mainPlane.projectPoint(Camera.memPos.clone().negate().setLength(0.01)))
-        this.vel.setLength(Math.min(this.vel.length(), 0.04)) // 0.055
+        this.vel.setLength(Math.min(this.vel.length(), 0.055)) // 0.055
         this.pos.add(this.vel)
-        for (wall of this.act.walls) {
-            if (wall != null && wall.plane.intersectsSphere(this.sphere)) {
-                this.vel.reflect(wall.plane.normal).multiplyScalar(0.7)
-                vect = wall.plane.normal.clone().setLength(this.rad + 0.01)
-                if (wall.plane.normal.dot(this.pos.clone().sub(wall.obj.position)) < 0)
-                    vect.negate()
-                vect.add(wall.plane.projectPoint(this.pos))
-                this.pos.copy(vect)
+        var newVel = this.vel.clone()
+        var enter = false
+        var vect
+        for (vis of this.vision) {
+            var t = Board.b[vis[0]][vis[1]]
+            for (wall of t.walls) {
+                if (wall != null && wall.box.intersectsSphere(this.sphere)) {
+                    newVel.reflect(wall.plane.normal)
+                    vect = wall.plane.normal.clone().setLength(this.rad + 0.055)
+                    if (wall.plane.normal.dot(this.pos.clone().sub(wall.obj.position)) < 0)
+                        vect.negate()
+                    vect.add(wall.plane.projectPoint(this.pos))
+                    enter = true
+                }
             }
+        }
+        if (enter) {
+            this.vel.copy(newVel.multiplyScalar(0.7))
+            this.pos.copy(vect)
         }
         for (val of this.vision) {
             var t = Board.b[val[0]][val[1]]
