@@ -256,9 +256,8 @@ var Board = {
             shuffle(tmp)
             for (let i = 0; i < 4; i++) {
                 var next = [dirs[tmp[i]][0] + now.pos[0], dirs[tmp[i]][1] + now.pos[1]]
-                if (exists(next) && !mark[next[0]][next[1]]) {
+                if (exists(next) && !mark[next[0]][next[1]])
                     stack.push([now ,this.b[next[0]][next[1]]])
-                }
             }
         }
     },

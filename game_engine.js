@@ -151,6 +151,10 @@ class Canvas {
     setInputInterval(num) {
         this.iInterval = setInterval(function(t) { t.updateInput(); }, num, this);
     }
+    setUpdateInterval(num) {
+        this.uInterval = setInterval(function(t) { t.update(); }, num, this);
+        this.dt = num
+    }
     reset() {
         this.objs = {};
         this.ctx.clearRect(0, 0, this.width, this.height);
@@ -160,6 +164,9 @@ class Canvas {
     }
     stopInput() {
         clearInterval(this.iInterval);
+    }
+    stopUpdate() {
+        clearInterval(this.uInterval);
     }
     add(e, name) {
         this.objs[name] = e;
@@ -194,6 +201,10 @@ class Canvas {
             }
         }
     }
+    update() {
+        for (let k in this.objs)
+            this.objs[k].update(this.dt);
+    }
     click() {
         for (let k in this.objs) {
             if (k.indexOf("B_") != -1) {
@@ -210,6 +221,9 @@ class Canvas {
         this.canvas.width = rwidth;
         this.canvas.height = rheight;
         this.draw();
+    }
+    scale(x, y) {
+        this.ctx.scale(x, y)
     }
     bind(key, func, e) {
         this.keysDown[key] = false;
