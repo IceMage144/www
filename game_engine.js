@@ -40,6 +40,7 @@ class Rectangle {
         this.col = col;
     }
     start() {}
+    update(dt) {}
     draw(ctx) {
         ctx.fillStyle = this.col;
         ctx.fillRect(this.x, this.y, this.w, this.h);
@@ -60,6 +61,7 @@ class Button {
     draw(ctx) {
         ctx.drawImage(this.img, this.x, this.y);
     }
+    update(dt) {}
     push(canvas) {
         if (mouseInRect(this.x, this.y, this.img.naturalWidth, this.img.naturalHeight, canvas))
             this.call.apply(this, this.args);
@@ -96,6 +98,75 @@ class Sprite {
     draw(ctx) {
         ctx.drawImage(this.img, this.x, this.y);
     }
+    drawSpriteAt(ctx, x, y) {
+        ctx.drawImage(this.img, x, y);
+    }
+}
+
+class Quad {
+    constructor(src, sx, sy, w, h, nfh=1, nfv=1) {
+        this.img = new Image()
+        this.img.src = src
+        this.sx = sx
+        this.sy = sy
+        this.w = w
+        this.h = h
+        this.nfh = nfh
+        this.nfv = nfv
+        this.maxFrame = nfv*nfh
+    }
+    start() {}
+    update(dt) {}
+    drawFrameAt(ctx, frame, x, y) {
+        let sx = this.sx + this.w*(frame%this.nfh)
+        let sy = this.sy + this.h*Math.floor(frame/this.nfh)
+        ctx.drawImage(this.img, sx, sy, this.w, this.h, x, y, this.w, this.h)
+    }
+    draw(ctx) {}
+}
+
+class Animation {
+    constructor(q, frames, type=STILL, time=0, animationEnd=null) {
+        this.quad = q
+        this.frames = frames
+        this.maxFrame = frames.length
+        this.frame = 0
+        this.type = type
+        this.timer = time
+        this.add = (type == STILL)? 0 : 1
+        this.onAnimationEnd = animationEnd
+        this.time = 0
+        this.mtx = false
+    }
+    start() {
+        this.quad.frame = this.frames[0]
+    }
+    update(dt) {
+        this.time += dt
+        if (this.time >= this.timer) {
+            this.time = 0
+            this.frame = this.frame + this.add
+            if (((this.frame == this.maxFrame && this.type == BEGTOEND) || (this.frame == 0 && this.type == BEGTOBEG)) && this.onAnimationEnd != null)
+                this.onAnimationEnd()
+            if (this.frame == this.maxFrame-1 || this.frame == 0)
+                this.add *= this.type
+            this.frame %= this.maxFrame
+            this.quad.frame = this.frames[this.frame]
+        }
+    }
+    draw(ctx) {}
+    drawAt(ctx, x, y) {
+        this.quad.drawFrameAt(ctx, this.frames[this.frame], x, y)
+    }
+    setAnimationType(t) {
+        this.type = t
+        this.add = (type == STILL)? 0 : 1
+    }
+    rewind() {
+        this.frame = 0
+        this.time = 0
+        this.add = (this.type == STILL)? 0 : 1
+    }
 }
 
 class Canvas {
@@ -125,6 +196,7 @@ class Canvas {
         this.keyPressFuncs = {};
         this.keyUpFuncs = {};
         this.keyDownFuncs = {};
+        this.clickFuncs = {}
         var bindClick = (function(e) { this.click(); }).bind(this);
         var bindKeyDown = (function(e) {
             e.preventDefault();
@@ -206,6 +278,8 @@ class Canvas {
             this.objs[k].update(this.dt);
     }
     click() {
+        for (let k in this.clickFuncs)
+            this.clickFuncs[k]()
         for (let k in this.objs) {
             if (k.indexOf("B_") != -1) {
                 if (!(k in this.objs))
@@ -239,5 +313,8 @@ class Canvas {
                 this.keyPressFuncs[key] = func;
                 break;
         }
+    }
+    bindClick(key, func) {
+        this.clickFuncs[key] = func
     }
 }
