@@ -18,13 +18,31 @@ const BEGTOBEG = -1
 const BEGTOEND = 1
 
 const CANNON = 0
+const FLAMETHROWER = 1
+const MATTER = 2
+const MINIGUN = 3
+const PISTOL = 4
+const ROCKET = 5
+const SHOTGUN = 6
 
 const ICONPATH = [
-    "assets/icons/cannon-shot.png"
+    "assets/icons/cannon-shot.png",
+    "assets/icons/fire.png",
+    "assets/icons/white-cat.png",
+    "assets/icons/minigun.png",
+    "assets/icons/pistol-gun.png",
+    "assets/icons/rocket.png",
+    "assets/icons/winchester-rifle.png"
 ]
 
 const TOWERPATH = [
-    "assets/topdown_shooter/towers/cannon/"
+    "assets/topdown_shooter/towers/cannon.png",
+    "assets/topdown_shooter/towers/flamethrower.png",
+    "assets/topdown_shooter/towers/matter.png",
+    "assets/topdown_shooter/towers/mg.png",
+    "assets/topdown_shooter/towers/pistol.png",
+    "assets/topdown_shooter/towers/rocket.png",
+    "assets/topdown_shooter/towers/shotgun.png"
 ]
 
 const TILEMAP = {
@@ -55,8 +73,8 @@ const MAPS = [[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                [0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
                [1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
                [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1]]]
+               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
+               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]]]
 
 function newArray(size, fill) {
     let arr = new Array(size);
@@ -73,54 +91,8 @@ function arrayCmp(a1, a2) {
     return true
 }
 
-function idn(pos1, pos2) {
-    let dif = [pos2[1] - pos1[1], pos2[0] - pos1[0]]
-    for (var i = 0; i < 4; i++) {
-        if (arrayCmp(dif, dirs[i]))
-            return i
-    }
-    return -1
-}
-
 function exists(pos) {
     return (pos[0] >= 0 && pos[0] < pheight && pos[1] >= 0 && pos[1] < pwidth)
-}
-
-function insideFrame(pos) {
-    return (pos[0] >= 1 && pos[0] < pheight-1 && pos[1] >= 1 && pos[1] < pwidth-1)
-}
-
-function shuffle(array) {
-    var currentIndex = array.length, temporaryValue, randomIndex
-    while (currentIndex != 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex)
-        currentIndex -= 1
-        temporaryValue = array[currentIndex]
-        array[currentIndex] = array[randomIndex]
-        array[randomIndex] = temporaryValue
-    }
-}
-
-class Stack {
-    constructor() {
-        this.v = []
-    }
-    push(e) {
-        this.v.push(e)
-    }
-    pop() {
-        return this.v.splice(this.v.length-1, 1)[0]
-    }
-    isEmpty() {
-        return (this.v.length == 0)
-    }
-    size() {
-        return this.v.length
-    }
-    top() {
-        if (this.size() == 0) return null
-        return this.v[this.size()-1]
-    }
 }
 
 class Tile {
@@ -182,7 +154,7 @@ class Enemy {
 
 class Tower {
     constructor(path, x, y, w, h) {
-        this.quad = new Quad(path+"1.png", 0, 0, w, h, 8, 1)
+        this.quad = new Quad(path, 0, 0, w, h, 8, 3)
         this.path = path
         this.x = x
         this.y = y
@@ -215,13 +187,11 @@ class Tower {
         }
     }
     draw(ctx) {
-        this.quad.drawFrameAt(ctx, this.dir, this.x-8, this.y-this.quad.h+32)
+        this.quad.drawFrameAt(ctx, this.dir+8*(this.level-1), this.x-16, this.y-this.quad.h+32)
     }
     upgrade() {
-        if (this.level < 3) {
+        if (this.level < 3)
             this.level++
-            this.quad.img.src = this.path + this.level + ".png"
-        }
         else
             console.log("You can't upgrade this tower anymore!!")
     }
@@ -235,7 +205,7 @@ var Cursor = {
         this.py = 0
         this.towerQuad = false
         this.tower = -1
-        this.defaultSize = [46, 86]
+        this.defaultSize = [64, 96]
     },
     update(dt) {
         if (this.visible) {
@@ -248,17 +218,20 @@ var Cursor = {
             var x = pixelSize*this.px
             var y = pixelSize*this.py
             this.sprite.drawSpriteAt(ctx, x, y)
-            this.towerQuad.drawFrameAt(ctx, 6, x-8, y-this.towerQuad.h+32)
+            ctx.save()
+            ctx.globalAlpha = 0.7
+            this.towerQuad.drawFrameAt(ctx, 6, x-16, y-this.towerQuad.h+32)
+            ctx.restore()
         }
     },
-    getTower(id, w, h) {
+    getTower(id) {
         console.log("GET")
-        this.towerQuad = new Quad(TOWERPATH[id]+"1.png", 0, 0, this.defaultSize[0], this.defaultSize[1], 8, 1)
+        this.towerQuad = new Quad(TOWERPATH[id], 0, 0, this.defaultSize[0], this.defaultSize[1], 8, 3)
         this.tower = id
         this.visible = true
     },
     putTower() {
-        if (Cursor.visible) {
+        if (this.visible) {
             if (map[this.py][this.px] == -1 && MAPS[actualMap][this.py][this.px] == 0) {
                 console.log("PUT")
                 var tower = new Tower(TOWERPATH[this.tower], pixelSize*this.px, pixelSize*this.py, this.defaultSize[0], this.defaultSize[1])
@@ -270,29 +243,67 @@ var Cursor = {
             else
                 console.log("You can't put your tower here!!")
         }
+    },
+    cancel() {
+        this.visible = false
     }
 }
-
-var Game = new Canvas("game", rwidth, rheight)
-
-var cannon = new Tower(TOWERPATH[CANNON], rwidth/2, rheight/2, 46, 86)
-
-var gork = new Enemy("assets/KemonoSprites/Gork.png", rwidth/2, rheight/2, 32, 32)
-
-var pathQuad = new Quad("assets/TileCraftSet/Tiles2.png", 0, 0, 32, 32, 9, 2)
-
-var testIcon = new Button(ICONPATH[CANNON], 13*pixelSize, 14*pixelSize, () => {
-    console.log("Nice")
-    Cursor.getTower(CANNON, 46, 86)
-})
-
-var selBG = new Rectangle(13*pixelSize, 14*pixelSize, 5*pixelSize, 2*pixelSize, Bl)
 
 var map = newArray(pheight, (i) => {
     return newArray(pwidth, (j) => {
         return -1
     })
 })
+
+var Game = new Canvas("game", rwidth, rheight)
+
+var cannon = new Tower(TOWERPATH[CANNON], rwidth/2, rheight/2, 64, 96)
+
+var gork = new Enemy("assets/KemonoSprites/Gork.png", rwidth/2, rheight/2, 32, 32)
+
+var pathQuad = new Quad("assets/TileCraftSet/Tiles2.png", 0, 0, 32, 32, 9, 2)
+
+var cannonIcon = new Button(ICONPATH[CANNON], 14*pixelSize, 14*pixelSize, () => {
+    console.log("CANNON")
+    Cursor.getTower(CANNON)
+})
+
+var ftIcon = new Button(ICONPATH[FLAMETHROWER], 15*pixelSize, 14*pixelSize, () => {
+    console.log("FLAMETHROWER")
+    Cursor.getTower(FLAMETHROWER)
+})
+
+var matterIcon = new Button(ICONPATH[MATTER], 16*pixelSize, 14*pixelSize, () => {
+    console.log("MATTER")
+    Cursor.getTower(MATTER)
+})
+
+var mgIcon = new Button(ICONPATH[MINIGUN], 17*pixelSize, 14*pixelSize, () => {
+    console.log("MINIGUN")
+    Cursor.getTower(MINIGUN)
+})
+
+var pistolIcon = new Button(ICONPATH[PISTOL], 14*pixelSize, 15*pixelSize, () => {
+    console.log("PISTOL")
+    Cursor.getTower(PISTOL)
+})
+
+var rocketIcon = new Button(ICONPATH[ROCKET], 15*pixelSize, 15*pixelSize, () => {
+    console.log("ROCKET")
+    Cursor.getTower(ROCKET)
+})
+
+var shotgunIcon = new Button(ICONPATH[SHOTGUN], 16*pixelSize, 15*pixelSize, () => {
+    console.log("SHOTGUN")
+    Cursor.getTower(SHOTGUN)
+})
+
+var cancelIcon = new Button("assets/icons/cancel.png", 17*pixelSize, 15*pixelSize, () => {
+    console.log("CANCEL")
+    Cursor.cancel()
+})
+
+var shopBG = new Rectangle(14*pixelSize, 14*pixelSize, 4*pixelSize, 2*pixelSize, Bl)
 
 var floor = newArray(pheight, (i) => {
     return newArray(pwidth, (j) => {
@@ -321,10 +332,17 @@ function main() {
         for (var j = 0; j < pwidth; j++)
             Game.add(floor[i][j], "Floor_" + i + "_" + j)
     }
-    Game.add(selBG, "ShopBG")
+    Game.add(shopBG, "ShopBG")
     Game.add(cannon, "Cannon")
     Game.add(gork, "Gork")
-    Game.add(testIcon, "B_CannonIcon")
+    Game.add(cannonIcon, "B_CannonIcon")
+    Game.add(ftIcon, "B_FtIcon")
+    Game.add(matterIcon, "B_MatterIcon")
+    Game.add(mgIcon, "B_MgIcon")
+    Game.add(pistolIcon, "B_PistolIcon")
+    Game.add(rocketIcon, "B_RocketIcon")
+    Game.add(shotgunIcon, "B_ShotgunIcon")
+    Game.add(cancelIcon, "B_CancelIcon")
     Game.add(Cursor, "Cursor")
     Game.bind(90, () => { cannon.upgrade(); }, KEY_DOWN)
     Game.bindClick("PutTower", () => { Cursor.putTower() })
