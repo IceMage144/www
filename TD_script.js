@@ -1,4 +1,3 @@
-//http://www.williammalone.com/articles/create-html5-canvas-javascript-sprite-animation/
 var dirs = [[1, 0], [0, -1], [-1, 0], [0, 1]]
 var dirNames = ["Right", "Up", "Left", "Down"]
 var pixelSize = 32
@@ -10,6 +9,8 @@ var rwidth = pwidth*pixelSize
 
 var towerCounter = 0
 var actualMap = 0
+
+var enemyVector = []
 
 const ANIMATION_TIME = 200
 
@@ -24,6 +25,17 @@ const MINIGUN = 3
 const PISTOL = 4
 const ROCKET = 5
 const SHOTGUN = 6
+
+const SHOPNAMES = [
+    "CANNON",
+    "FLAMETHROWER",
+    "MATTER",
+    "MINIGUN",
+    "PISTOL",
+    "ROCKET",
+    "SHOTGUN",
+    "CANCEL"
+]
 
 const ICONPATH = [
     "assets/icons/cannon-shot.png",
@@ -73,8 +85,16 @@ const MAPS = [[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                [0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
                [1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
                [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
-               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]]]
+               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2],
+               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2]]]
+
+const BEGS = [[12, 0], [12, 1], [12, 2], [11, 2], [10, 2], [9, 2], [8, 2], [7, 2],
+[6, 2], [5, 2], [4, 2], [3, 2], [2, 2], [2, 3], [2, 4], [2, 5], [3, 5], [4, 5], [5, 5],
+[6, 5], [7, 5], [8, 5], [9, 5], [10, 5], [11, 5], [12, 5], [13, 5], [13, 6], [13, 7],
+[13, 8], [13, 9], [12, 9], [11, 9], [10, 9], [9, 9], [8, 9], [7, 9], [6, 9], [5, 9],
+[5, 10], [5, 11], [4, 11], [3, 11], [3, 12], [3, 13], [4, 13], [5, 13], [6, 13],
+[7, 13], [8, 13], [9, 13], [10, 13], [10, 14], [10, 15], [10, 16], [9, 16], [8, 16],
+[7, 16], [6, 16], [6, 17]]
 
 function newArray(size, fill) {
     let arr = new Array(size);
@@ -114,6 +134,9 @@ class Tile {
 class Enemy {
     constructor(path, x, y, w, h) {
         this.quad = new Quad(path, 0, 0, w, h, 6, 4)
+        this.lbbg = new Rectangle(0, 0, 32, 4, Rd)
+        this.lb = new Rectangle(0, 0, 32, 4, Lg)
+        this.life = 100
         this.x = x
         this.y = y
         this.dir = 3
@@ -126,6 +149,7 @@ class Enemy {
         ]
         this.time = 0
         this.timer = Math.floor(ANIMATION_TIME+Math.random()*ANIMATION_TIME*4)
+        this.local = 0
     }
     start() {}
     update(dt) {
@@ -135,13 +159,13 @@ class Enemy {
             this.dir = Math.floor(Math.random()*4)
             this.timer = Math.floor(ANIMATION_TIME+Math.random()*ANIMATION_TIME*4)
         }
-        if (this.prevDir != this.dir) {
-            //this.anims[this.prevDir].rewind()
+        if (this.prevDir != this.dir)
             this.anims[this.dir].start()
-        }
         this.anims[this.dir].update(dt)
         this.move(dirs[this.dir][0], dirs[this.dir][1])
         this.prevDir = this.dir
+        this.life = Math.min(100, Math.max(0, this.life))
+        this.lb.w = this.life*0.32
     }
     move(dx, dy) {
         this.x += dx
@@ -149,6 +173,8 @@ class Enemy {
     }
     draw(ctx) {
         this.anims[this.dir].drawAt(ctx, this.x-this.quad.w/2, this.y-this.quad.h/2)
+        this.lbbg.drawAt(ctx, this.x-this.quad.w/2, this.y-this.quad.h/2)
+        this.lb.drawAt(ctx, this.x-this.quad.w/2, this.y-this.quad.h/2)
     }
 }
 
@@ -160,14 +186,27 @@ class Tower {
         this.y = y
         this.dir = 6
         this.level = 1
+        this.time = 500
+        this.timer = 500
+        this.ready = false
+        this.range = 150
     }
     start() {}
-    shot() {
+    shot(target) {
+        console.log("BANG!")
+        this.ready = false
+        this.time = this.timer
         // Create bullet
     }
     update(dt) {
-        var angle = Math.atan2(Game.mousePos[1] - this.y, Game.mousePos[0] - this.x)
-        if (!this.shoting) {
+        var target = false
+        for (var i = 0; i < enemyVector.length; i++) {
+            var dist = Math.pow(this.x - enemyVector[i].x, 2) + Math.pow(this.y - enemyVector[i].y, 2)
+            if (dist < this.range*this.range && (!target || enemyVector[i].local > target.local))
+                target = enemyVector[i]
+        }
+        if (target) {
+            var angle = Math.atan2(target.y - this.y, target.x - this.x)
             if (angle <= Math.PI/8 && angle > -Math.PI/8)
                 this.dir = 0
             else if (angle <= 3*Math.PI/8 && angle > Math.PI/8)
@@ -185,6 +224,12 @@ class Tower {
             else if (angle <= -Math.PI/8 && angle > -3*Math.PI/8)
                 this.dir = 1
         }
+        if (!this.ready) {
+            this.time = Math.max(0, this.time-dt)
+            if (this.time == 0) this.ready = true
+        }
+        else if (target)
+            this.shot(target)
     }
     draw(ctx) {
         this.quad.drawFrameAt(ctx, this.dir+8*(this.level-1), this.x-16, this.y-this.quad.h+32)
@@ -260,50 +305,23 @@ var Game = new Canvas("game", rwidth, rheight)
 var cannon = new Tower(TOWERPATH[CANNON], rwidth/2, rheight/2, 64, 96)
 
 var gork = new Enemy("assets/KemonoSprites/Gork.png", rwidth/2, rheight/2, 32, 32)
+enemyVector[0] = gork
 
-var pathQuad = new Quad("assets/TileCraftSet/Tiles2.png", 0, 0, 32, 32, 9, 2)
+var shopBG = new Rectangle(14*pixelSize, 14*pixelSize, 4*pixelSize, 2*pixelSize, Bl)
 
-var cannonIcon = new Button(ICONPATH[CANNON], 14*pixelSize, 14*pixelSize, () => {
-    console.log("CANNON")
-    Cursor.getTower(CANNON)
+var shopButtons = newArray(7, (i) => {
+    return new Button(ICONPATH[i], (14 + i%4)*pixelSize, (14 + Math.floor(i/4))*pixelSize, () => {
+        console.log(SHOPNAMES[i])
+        Cursor.getTower(i)
+    })
 })
 
-var ftIcon = new Button(ICONPATH[FLAMETHROWER], 15*pixelSize, 14*pixelSize, () => {
-    console.log("FLAMETHROWER")
-    Cursor.getTower(FLAMETHROWER)
-})
-
-var matterIcon = new Button(ICONPATH[MATTER], 16*pixelSize, 14*pixelSize, () => {
-    console.log("MATTER")
-    Cursor.getTower(MATTER)
-})
-
-var mgIcon = new Button(ICONPATH[MINIGUN], 17*pixelSize, 14*pixelSize, () => {
-    console.log("MINIGUN")
-    Cursor.getTower(MINIGUN)
-})
-
-var pistolIcon = new Button(ICONPATH[PISTOL], 14*pixelSize, 15*pixelSize, () => {
-    console.log("PISTOL")
-    Cursor.getTower(PISTOL)
-})
-
-var rocketIcon = new Button(ICONPATH[ROCKET], 15*pixelSize, 15*pixelSize, () => {
-    console.log("ROCKET")
-    Cursor.getTower(ROCKET)
-})
-
-var shotgunIcon = new Button(ICONPATH[SHOTGUN], 16*pixelSize, 15*pixelSize, () => {
-    console.log("SHOTGUN")
-    Cursor.getTower(SHOTGUN)
-})
-
-var cancelIcon = new Button("assets/icons/cancel.png", 17*pixelSize, 15*pixelSize, () => {
+shopButtons[7] = new Button("assets/icons/cancel.png", 17*pixelSize, 15*pixelSize, () => {
     console.log("CANCEL")
     Cursor.cancel()
 })
 
-var shopBG = new Rectangle(14*pixelSize, 14*pixelSize, 4*pixelSize, 2*pixelSize, Bl)
+var pathQuad = new Quad("assets/TileCraftSet/Tiles2.png", 0, 0, 32, 32, 9, 2)
 
 var floor = newArray(pheight, (i) => {
     return newArray(pwidth, (j) => {
@@ -335,16 +353,10 @@ function main() {
     Game.add(shopBG, "ShopBG")
     Game.add(cannon, "Cannon")
     Game.add(gork, "Gork")
-    Game.add(cannonIcon, "B_CannonIcon")
-    Game.add(ftIcon, "B_FtIcon")
-    Game.add(matterIcon, "B_MatterIcon")
-    Game.add(mgIcon, "B_MgIcon")
-    Game.add(pistolIcon, "B_PistolIcon")
-    Game.add(rocketIcon, "B_RocketIcon")
-    Game.add(shotgunIcon, "B_ShotgunIcon")
-    Game.add(cancelIcon, "B_CancelIcon")
+    for (var i = 0; i < 8; i++)
+        Game.add(shopButtons[i], "B_" + SHOPNAMES[i] + "Icon")
     Game.add(Cursor, "Cursor")
-    Game.bind(90, () => { cannon.upgrade(); }, KEY_DOWN)
+    Game.bind(90, () => { gork.life -= 10 }, KEY_DOWN)
     Game.bindClick("PutTower", () => { Cursor.putTower() })
 }
 

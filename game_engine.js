@@ -45,6 +45,10 @@ class Rectangle {
         ctx.fillStyle = this.col;
         ctx.fillRect(this.x, this.y, this.w, this.h);
     }
+    drawAt(ctx, x, y) {
+        ctx.fillStyle = this.col;
+        ctx.fillRect(x, y, this.w, this.h);
+    }
 }
 
 class Button {
