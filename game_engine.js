@@ -1,4 +1,5 @@
-const Op = "rgba(0, 0, 0, 0.5)"   // Opaque
+const Op5 = "rgba(0, 0, 0, 0.5)"  // Opaque 50%
+const Op2 = "rgba(0, 0, 0, 0.2)"  // Opaque 20%
 const Wh = "rgb(255, 255, 255)"   // White
 const Me = "rgb(130, 130, 130)"   // Metal grey
 const Bl = "rgb(0,   0,   0  )"   // Black
@@ -21,6 +22,10 @@ const Or = "rgb(255, 165, 0  )"   // Orange
 const KEY_UP = 0;
 const KEY_DOWN = 1;
 const KEY_PRESS = 2;
+
+const STILL = 0
+const BEGTOBEG = -1
+const BEGTOEND = 1
 
 function mouseInRect(x, y, width, height, canvas) {
     let mp = canvas.mousePos;
@@ -124,7 +129,12 @@ class Quad {
     drawFrameAt(ctx, frame, x, y) {
         let sx = this.sx + this.w*(frame%this.nfh)
         let sy = this.sy + this.h*Math.floor(frame/this.nfh)
-        ctx.drawImage(this.img, sx, sy, this.w, this.h, x, y, this.w, this.h)
+        //try {
+            ctx.drawImage(this.img, sx, sy, this.w, this.h, x, y, this.w, this.h)
+        //}
+        //catch (err) {
+            //console.log(err.name, sx, sy, this.w, this.h, x, y)
+        //}
     }
     draw(ctx) {}
 }
@@ -141,6 +151,7 @@ class Animation {
         this.onAnimationEnd = animationEnd
         this.time = 0
         this.mtx = false
+        this.quad.frame = this.frames[0]
     }
     start() {
         this.quad.frame = this.frames[0]
@@ -173,6 +184,14 @@ class Animation {
     }
 }
 
+class Layer {
+    constructor() {
+        this.objs = {}
+        this.sort = false
+        this.sortedKeys = []
+    }
+}
+
 class Canvas {
     /* 37 => left
     |  38 => up
@@ -191,7 +210,8 @@ class Canvas {
         }
         this.width = width;
         this.height = height;
-        this.objs = {};
+        this.layers = [new Layer()];
+        this.numLayers = 1
         this.ingame = false;
         this.paused = false;
         this.mousePos = [0, 0];
@@ -232,7 +252,7 @@ class Canvas {
         this.dt = num
     }
     reset() {
-        this.objs = {};
+        this.layers = [new Layer()]
         this.ctx.clearRect(0, 0, this.width, this.height);
     }
     stopDraw() {
@@ -244,21 +264,40 @@ class Canvas {
     stopUpdate() {
         clearInterval(this.uInterval);
     }
-    add(e, name) {
-        this.objs[name] = e;
+    add(e, name, layer=0) {
+        if (layer >= this.numLayers || layer < 0)
+            throw new RangeError("Layer " + layer + " doesn't exists")
+        this.layers[layer].objs[name] = e;
+        this.layers[layer].sortedKeys.push(name)
         e.start();
         e.draw(this.ctx);
     }
-    del(name) {
-        delete this.objs[name];
+    del(name, layer=0) {
+        var index = this.layers[layer].sortedKeys.indexOf(name)
+        if (index != -1)
+            this.layers[layer].sortedKeys.splice(index, 1)
+        delete this.layers[layer].objs[name];
     }
-    get(name) {
-        return this.objs[name];
+    get(name, layer=0) {
+        return this.layers[layer].objs[name];
     }
-    async draw() {
+    addLayer(num=1) {
+        for (let i = 0; i < num; i++) {
+            this.layers[this.numLayers] = new Layer()
+            this.numLayers++
+        }
+    }
+    setLayerProp(layer, prop, val) {
+        this.layers[layer][prop] = val
+    }
+    draw() {
         this.ctx.clearRect(0, 0, this.width, this.height);
-        for (let k in this.objs)
-            await this.objs[k].draw(this.ctx);
+        for (let l = 0; l < this.numLayers; l++) {
+            if (this.layers[l].sort)
+                this.layers[l].sortedKeys.sort(((l, a, b) => { return l.objs[a].y - l.objs[b].y }).bind(null, this.layers[l]))
+            for (let k = 0; k < this.layers[l].sortedKeys.length; k++)
+                this.layers[l].objs[this.layers[l].sortedKeys[k]].draw(this.ctx);
+        }
     }
     updateInput() {
         for (let k in this.keysDown) {
@@ -278,17 +317,21 @@ class Canvas {
         }
     }
     update() {
-        for (let k in this.objs)
-            this.objs[k].update(this.dt);
+        for (let l = 0; l < this.numLayers; l++) {
+            for (let k in this.layers[l].objs)
+                this.layers[l].objs[k].update(this.dt);
+        }
     }
     click() {
         for (let k in this.clickFuncs)
             this.clickFuncs[k]()
-        for (let k in this.objs) {
-            if (k.indexOf("B_") != -1) {
-                if (!(k in this.objs))
-                    continue;
-                this.objs[k].push(this);
+        for (let l = 0; l < this.numLayers; l++) {
+            for (let k in this.layers[l].objs) {
+                if (k.indexOf("B_") != -1) {
+                    if (!(k in this.layers[l].objs))
+                        continue;
+                    this.layers[l].objs[k].push(this);
+                }
             }
         }
     }

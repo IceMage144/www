@@ -8,15 +8,13 @@ var rheight = pheight*pixelSize
 var rwidth = pwidth*pixelSize
 
 var towerCounter = 0
+var enemyCounter = 0
+var bulletCounter = 0
 var actualMap = 0
 
-var enemyVector = []
+var enemyVector = {}
 
 const ANIMATION_TIME = 200
-
-const STILL = 0
-const BEGTOBEG = -1
-const BEGTOEND = 1
 
 const CANNON = 0
 const FLAMETHROWER = 1
@@ -57,6 +55,26 @@ const TOWERPATH = [
     "assets/topdown_shooter/towers/shotgun.png"
 ]
 
+const BULLETPATH = [
+    "assets/topdown_shooter/other/cannonball.png",
+    "assets/topdown_shooter/other/flamethrower_bullet.png",
+    "assets/topdown_shooter/other/cat.png",
+    "assets/topdown_shooter/other/bulletc.png",
+    "assets/topdown_shooter/other/bulleta.png",
+    "assets/topdown_shooter/other/rocket.png",
+    "assets/topdown_shooter/other/bulletb.png"
+]
+
+const BULLETSIZE = [
+    [34, 34],
+    [20, 52],
+    [28, 38],
+    [16, 22],
+    [12, 12],
+    [14, 26],
+    [16, 20]
+]
+
 const TILEMAP = {
     0b0011 : 9,
     0b0101 : 0,
@@ -88,19 +106,28 @@ const MAPS = [[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2],
                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2]]]
 
-const BEGS = [[12, 0], [12, 1], [12, 2], [11, 2], [10, 2], [9, 2], [8, 2], [7, 2],
+const BEGS = [[12, -1], [12, 0], [12, 1], [12, 2], [11, 2], [10, 2], [9, 2], [8, 2], [7, 2],
 [6, 2], [5, 2], [4, 2], [3, 2], [2, 2], [2, 3], [2, 4], [2, 5], [3, 5], [4, 5], [5, 5],
 [6, 5], [7, 5], [8, 5], [9, 5], [10, 5], [11, 5], [12, 5], [13, 5], [13, 6], [13, 7],
 [13, 8], [13, 9], [12, 9], [11, 9], [10, 9], [9, 9], [8, 9], [7, 9], [6, 9], [5, 9],
 [5, 10], [5, 11], [4, 11], [3, 11], [3, 12], [3, 13], [4, 13], [5, 13], [6, 13],
 [7, 13], [8, 13], [9, 13], [10, 13], [10, 14], [10, 15], [10, 16], [9, 16], [8, 16],
-[7, 16], [6, 16], [6, 17]]
+[7, 16], [6, 16], [6, 17], [6, 18]]
 
 function newArray(size, fill) {
     let arr = new Array(size);
     for (let i = 0; i < size; i++)
         arr[i] = fill(i);
     return arr;
+}
+
+function pointInRect(px, py, rx, ry, width, height) {
+    return px >= rx && px <= rx + width && py >= ry && py <= ry + height;
+}
+
+function mouseInRect(x, y, width, height) {
+    let mp = Game.mousePos;
+    return pointInRect(mp[0], mp[1], x, y, width, height);
 }
 
 function arrayCmp(a1, a2) {
@@ -111,8 +138,27 @@ function arrayCmp(a1, a2) {
     return true
 }
 
+function idn(d) {
+    for (var i = 0; i < 4; i++) {
+        if (arrayCmp(d, dirs[i]))
+            return i
+    }
+    return -1
+}
+
 function exists(pos) {
     return (pos[0] >= 0 && pos[0] < pheight && pos[1] >= 0 && pos[1] < pwidth)
+}
+
+function bisect(list, pos, speed) {
+    var act = Math.floor(pos*speed)
+    if (act+1 >= list.length)
+        return [-1, -1, 3]
+    var perc = pos*speed - act
+    var dir = idn([list[act+1][1] - list[act][1], list[act+1][0] - list[act][0]])
+    var x = (list[act][1]*(1-perc) + list[act+1][1]*perc)*pixelSize + pixelSize/2
+    var y = (list[act][0]*(1-perc) + list[act+1][0]*perc)*pixelSize + pixelSize/4
+    return [x, y, dir]
 }
 
 class Tile {
@@ -132,7 +178,7 @@ class Tile {
 }
 
 class Enemy {
-    constructor(path, x, y, w, h) {
+    constructor(path, x, y, w, h, name) {
         this.quad = new Quad(path, 0, 0, w, h, 6, 4)
         this.lbbg = new Rectangle(0, 0, 32, 4, Rd)
         this.lb = new Rectangle(0, 0, 32, 4, Lg)
@@ -150,22 +196,23 @@ class Enemy {
         this.time = 0
         this.timer = Math.floor(ANIMATION_TIME+Math.random()*ANIMATION_TIME*4)
         this.local = 0
+        this.speed = 0.05
+        this.name = name
     }
     start() {}
     update(dt) {
-        this.time += dt
-        if (this.time >= this.timer) {
-            this.time = 0
-            this.dir = Math.floor(Math.random()*4)
-            this.timer = Math.floor(ANIMATION_TIME+Math.random()*ANIMATION_TIME*4)
-        }
+        [this.x, this.y, this.dir] = bisect(BEGS, this.local, this.speed)
+        this.local++
         if (this.prevDir != this.dir)
             this.anims[this.dir].start()
         this.anims[this.dir].update(dt)
-        this.move(dirs[this.dir][0], dirs[this.dir][1])
         this.prevDir = this.dir
         this.life = Math.min(100, Math.max(0, this.life))
         this.lb.w = this.life*0.32
+        if (this.life == 0 || this.x == -1) {
+            Game.del(this.name, 1)
+            delete enemyVector[this.name]
+        }
     }
     move(dx, dy) {
         this.x += dx
@@ -179,9 +226,9 @@ class Enemy {
 }
 
 class Tower {
-    constructor(path, x, y, w, h) {
-        this.quad = new Quad(path, 0, 0, w, h, 8, 3)
-        this.path = path
+    constructor(type, x, y, w, h) {
+        this.quad = new Quad(TOWERPATH[type], 0, 0, w, h, 8, 3)
+        this.type = type
         this.x = x
         this.y = y
         this.dir = 6
@@ -193,17 +240,19 @@ class Tower {
     }
     start() {}
     shot(target) {
-        console.log("BANG!")
         this.ready = false
         this.time = this.timer
-        // Create bullet
+        var name = "Bullet_" + bulletCounter
+        var dy = (this.level == 1)? pixelSize : 3*pixelSize/2
+        Game.add(new Bullet(this.x, this.y - dy, this.type, name, target), name, 2)
+        bulletCounter++
     }
     update(dt) {
         var target = false
-        for (var i = 0; i < enemyVector.length; i++) {
-            var dist = Math.pow(this.x - enemyVector[i].x, 2) + Math.pow(this.y - enemyVector[i].y, 2)
-            if (dist < this.range*this.range && (!target || enemyVector[i].local > target.local))
-                target = enemyVector[i]
+        for (var k in enemyVector) {
+            var dist = Math.pow(this.x - enemyVector[k].x, 2) + Math.pow(this.y - enemyVector[k].y, 2)
+            if (dist < this.range*this.range && (!target || enemyVector[k].local > target.local) && enemyVector[k].life != 0)
+                target = enemyVector[k]
         }
         if (target) {
             var angle = Math.atan2(target.y - this.y, target.x - this.x)
@@ -232,7 +281,16 @@ class Tower {
             this.shot(target)
     }
     draw(ctx) {
-        this.quad.drawFrameAt(ctx, this.dir+8*(this.level-1), this.x-16, this.y-this.quad.h+32)
+        if (Cursor.isAt(this.x, this.y, 1, 1)) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.range, 0, 2 * Math.PI, false);
+            ctx.fillStyle = Op2;
+            ctx.fill();
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = Bl;
+            ctx.stroke();
+        }
+        this.quad.drawFrameAt(ctx, this.dir+8*(this.level-1), this.x-pixelSize, this.y-this.quad.h+pixelSize/2)
     }
     upgrade() {
         if (this.level < 3)
@@ -242,27 +300,69 @@ class Tower {
     }
 }
 
+class Bullet {
+    constructor(x, y, type, name, target) {
+        this.x = x
+        this.y = y
+        this.angle = 0
+        this.type = type
+        this.target = target
+        this.speed = 4
+        this.name = name
+        this.size = [BULLETSIZE[type][0], BULLETSIZE[type][1]]
+        var frames = (type == FLAMETHROWER)? 2 : 1
+        this.size[1] /= frames
+        this.quad = new Quad(BULLETPATH[type], 0, 0, this.size[1], this.size[0], frames, 1)
+        this.anim = new Animation(this.quad, ((type == 1)? [0, 1] : [0]), BEGTOEND, 200)
+        this.anim.rewind()
+    }
+    start() {}
+    update(dt) {
+        this.anim.update(dt)
+        var dx = this.target.x - this.x
+        var dy = this.target.y - this.y
+        this.angle = Math.atan2(dy, dx)
+        var dist = Math.sqrt(dx*dx + dy*dy)
+        this.x += dx*this.speed/dist
+        this.y += dy*this.speed/dist
+        if (this.target.x == -1)
+            Game.del(this.name, 2)
+        else if (dist < this.target.quad.h/2) {
+            this.target.life -= 20
+            Game.del(this.name, 2)
+        }
+    }
+    draw(ctx) {
+        ctx.save()
+        ctx.translate(this.x, this.y)
+        ctx.rotate(this.angle)
+        this.anim.drawAt(ctx, -this.size[1]/2, -this.size[0]/2)
+        ctx.restore()
+    }
+}
+
 var Cursor = {
     start() {
-        this.visible = false
         this.sprite = new Sprite("assets/cursor.png", 0, 0)
         this.px = 0
         this.py = 0
+        this.x = 0
+        this.y = 0
         this.towerQuad = false
         this.tower = -1
         this.defaultSize = [64, 96]
     },
     update(dt) {
-        if (this.visible) {
-            this.px = Math.min(pwidth-1, Math.max(0, Math.floor(Game.mousePos[0]/pixelSize)))
-            this.py = Math.min(pheight-1, Math.max(0, Math.floor(Game.mousePos[1]/pixelSize)))
-        }
+        this.px = Math.min(pwidth-1, Math.max(0, Math.floor(Game.mousePos[0]/pixelSize)))
+        this.py = Math.min(pheight-1, Math.max(0, Math.floor(Game.mousePos[1]/pixelSize)))
+        this.x = this.px*pixelSize + pixelSize/2
+        this.y = this.py*pixelSize + pixelSize/2
     },
     draw(ctx) {
-        if (this.visible) {
-            var x = pixelSize*this.px
-            var y = pixelSize*this.py
-            this.sprite.drawSpriteAt(ctx, x, y)
+        var x = pixelSize*this.px
+        var y = pixelSize*this.py
+        this.sprite.drawSpriteAt(ctx, x, y)
+        if (this.tower != -1) {
             ctx.save()
             ctx.globalAlpha = 0.7
             this.towerQuad.drawFrameAt(ctx, 6, x-16, y-this.towerQuad.h+32)
@@ -273,25 +373,51 @@ var Cursor = {
         console.log("GET")
         this.towerQuad = new Quad(TOWERPATH[id], 0, 0, this.defaultSize[0], this.defaultSize[1], 8, 3)
         this.tower = id
-        this.visible = true
     },
     putTower() {
-        if (this.visible) {
+        if (this.tower != -1) {
             if (map[this.py][this.px] == -1 && MAPS[actualMap][this.py][this.px] == 0) {
                 console.log("PUT")
-                var tower = new Tower(TOWERPATH[this.tower], pixelSize*this.px, pixelSize*this.py, this.defaultSize[0], this.defaultSize[1])
+                var tower = new Tower(this.tower, pixelSize*this.px+16, pixelSize*this.py+16, this.defaultSize[0], this.defaultSize[1])
                 map[this.py][this.px] = towerCounter
-                Game.add(tower, "Tower_" + towerCounter)
+                Game.add(tower, "Tower_" + towerCounter, 1)
                 towerCounter++
-                this.visible = false
+                this.tower = -1
             }
             else
                 console.log("You can't put your tower here!!")
         }
     },
     cancel() {
-        this.visible = false
+        this.tower = -1
+    },
+    isAt(x, y, w, h) {
+        var px = Math.floor(x/pixelSize)
+        var py = Math.floor(y/pixelSize)
+        return this.px >= px && this.px < px+w && this.py >= py && this.py < py+h
     }
+}
+
+var Spawner = {
+    start() {
+        this.time = 1000
+        this.timer = 1000
+    },
+    update(dt) {
+        this.time -= dt
+        if (this.time <= 0) {
+            this.spawn()
+            this.time = this.timer
+        }
+    },
+    spawn() {
+        var name = "Enemy_" + enemyCounter
+        enemyCounter++
+        var mons = new Enemy("assets/KemonoSprites/Gork.png", BEGS[0][1]*pixelSize, BEGS[0][0]*pixelSize, 32, 32, name)
+        enemyVector[name] = mons
+        Game.add(mons, name, 1)
+    },
+    draw(ctx) {}
 }
 
 var map = newArray(pheight, (i) => {
@@ -301,13 +427,6 @@ var map = newArray(pheight, (i) => {
 })
 
 var Game = new Canvas("game", rwidth, rheight)
-
-var cannon = new Tower(TOWERPATH[CANNON], rwidth/2, rheight/2, 64, 96)
-
-var gork = new Enemy("assets/KemonoSprites/Gork.png", rwidth/2, rheight/2, 32, 32)
-enemyVector[0] = gork
-
-var shopBG = new Rectangle(14*pixelSize, 14*pixelSize, 4*pixelSize, 2*pixelSize, Bl)
 
 var shopButtons = newArray(7, (i) => {
     return new Button(ICONPATH[i], (14 + i%4)*pixelSize, (14 + Math.floor(i/4))*pixelSize, () => {
@@ -346,17 +465,17 @@ function main() {
     Game.setDrawInterval(10)
     Game.setUpdateInterval(10)
     Game.setInputInterval(10)
+    Game.addLayer(2)
+    Game.setLayerProp(1, "sort", true)
     for (var i = 0; i < pheight; i++) {
         for (var j = 0; j < pwidth; j++)
             Game.add(floor[i][j], "Floor_" + i + "_" + j)
     }
-    Game.add(shopBG, "ShopBG")
-    Game.add(cannon, "Cannon")
-    Game.add(gork, "Gork")
     for (var i = 0; i < 8; i++)
         Game.add(shopButtons[i], "B_" + SHOPNAMES[i] + "Icon")
-    Game.add(Cursor, "Cursor")
-    Game.bind(90, () => { gork.life -= 10 }, KEY_DOWN)
+    Game.add(Cursor, "Cursor", 1)
+    Game.add(Spawner, "Spawner")
+    //Game.bind(90, () => { }, KEY_DOWN)
     Game.bindClick("PutTower", () => { Cursor.putTower() })
 }
 
