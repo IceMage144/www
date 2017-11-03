@@ -72,8 +72,11 @@ class Button {
     }
     update(dt) {}
     push(canvas) {
-        if (mouseInRect(this.x, this.y, this.img.naturalWidth, this.img.naturalHeight, canvas))
+        if (mouseInRect(this.x, this.y, this.img.naturalWidth, this.img.naturalHeight, canvas)) {
             this.call.apply(this, this.args);
+            return true
+        }
+        return false
     }
 }
 
@@ -129,12 +132,7 @@ class Quad {
     drawFrameAt(ctx, frame, x, y) {
         let sx = this.sx + this.w*(frame%this.nfh)
         let sy = this.sy + this.h*Math.floor(frame/this.nfh)
-        //try {
-            ctx.drawImage(this.img, sx, sy, this.w, this.h, x, y, this.w, this.h)
-        //}
-        //catch (err) {
-            //console.log(err.name, sx, sy, this.w, this.h, x, y)
-        //}
+        ctx.drawImage(this.img, sx, sy, this.w, this.h, x, y, this.w, this.h)
     }
     draw(ctx) {}
 }
@@ -323,17 +321,18 @@ class Canvas {
         }
     }
     click() {
-        for (let k in this.clickFuncs)
-            this.clickFuncs[k]()
         for (let l = 0; l < this.numLayers; l++) {
             for (let k in this.layers[l].objs) {
                 if (k.indexOf("B_") != -1) {
                     if (!(k in this.layers[l].objs))
                         continue;
-                    this.layers[l].objs[k].push(this);
+                    if (this.layers[l].objs[k].push(this))
+                        return;
                 }
             }
         }
+        for (let k in this.clickFuncs)
+            this.clickFuncs[k]()
     }
     resize(num) {
         pixelSize += num;

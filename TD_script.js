@@ -3,10 +3,11 @@ var dirNames = ["Right", "Up", "Left", "Down"]
 var pixelSize = 32
 var pixelBorder = 2
 var pheight = 16
-var pwidth = 18
+var pwidth = 22
 var rheight = pheight*pixelSize
 var rwidth = pwidth*pixelSize
 
+var uiWidth = 4
 var towerCounter = 0
 var enemyCounter = 0
 var bulletCounter = 0
@@ -75,6 +76,12 @@ const BULLETSIZE = [
     [16, 20]
 ]
 
+const RANKPATH = [
+    "assets/icons/rank-1.png",
+    "assets/icons/rank-2.png",
+    "assets/icons/rank-3.png"
+]
+
 const TILEMAP = {
     0b0011 : 9,
     0b0101 : 0,
@@ -103,8 +110,8 @@ const MAPS = [[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                [0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
                [1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
                [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2],
-               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2]]]
+               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]]
 
 const BEGS = [[12, -1], [12, 0], [12, 1], [12, 2], [11, 2], [10, 2], [9, 2], [8, 2], [7, 2],
 [6, 2], [5, 2], [4, 2], [3, 2], [2, 2], [2, 3], [2, 4], [2, 5], [3, 5], [4, 5], [5, 5],
@@ -147,7 +154,7 @@ function idn(d) {
 }
 
 function exists(pos) {
-    return (pos[0] >= 0 && pos[0] < pheight && pos[1] >= 0 && pos[1] < pwidth)
+    return (pos[0] >= 0 && pos[0] < pheight && pos[1] >= 0 && pos[1] < pwidth-uiWidth)
 }
 
 function bisect(list, pos, speed) {
@@ -212,6 +219,7 @@ class Enemy {
         if (this.life == 0 || this.x == -1) {
             Game.del(this.name, 1)
             delete enemyVector[this.name]
+            UI.money += 100
         }
     }
     move(dx, dy) {
@@ -226,7 +234,7 @@ class Enemy {
 }
 
 class Tower {
-    constructor(type, x, y, w, h) {
+    constructor(type, x, y, w, h, name) {
         this.quad = new Quad(TOWERPATH[type], 0, 0, w, h, 8, 3)
         this.type = type
         this.x = x
@@ -237,14 +245,38 @@ class Tower {
         this.timer = 500
         this.ready = false
         this.range = 150
+        this.damage = 20
+        this.name = name
     }
     start() {}
     shot(target) {
         this.ready = false
         this.time = this.timer
         var name = "Bullet_" + bulletCounter
-        var dy = (this.level == 1)? pixelSize : 3*pixelSize/2
-        Game.add(new Bullet(this.x, this.y - dy, this.type, name, target), name, 2)
+        var yvar = (this.level == 1)? pixelSize : 3*pixelSize/2
+        var dx = target.x - this.x
+        var dy = target.y - this.y
+        var dist = Math.sqrt(dx*dx + dy*dy)
+        var angle = Math.atan2(dy + yvar, dx)
+        dx *= 20/dist // Magic number :O
+        dy *= 20/dist // Magic number :O
+        if (angle <= Math.PI/8 && angle > -Math.PI/8)
+            this.dir = 0
+        else if (angle <= 3*Math.PI/8 && angle > Math.PI/8)
+            this.dir = 7
+        else if (angle <= 5*Math.PI/8 && angle > 3*Math.PI/8)
+            this.dir = 6
+        else if (angle <= 7*Math.PI/8 && angle > 5*Math.PI/8)
+            this.dir = 5
+        else if (angle > 7*Math.PI/8 || angle <= -7*Math.PI/8)
+            this.dir = 4
+        else if (angle <= -5*Math.PI/8 && angle > -7*Math.PI/8)
+            this.dir = 3
+        else if (angle <= -3*Math.PI/8 && angle > -5*Math.PI/8)
+            this.dir = 2
+        else if (angle <= -Math.PI/8 && angle > -3*Math.PI/8)
+            this.dir = 1
+        Game.add(new Bullet(this.x + dx, this.y - yvar + dy, this.type, name, target, this.damage), name, 2)
         bulletCounter++
     }
     update(dt) {
@@ -254,25 +286,6 @@ class Tower {
             if (dist < this.range*this.range && (!target || enemyVector[k].local > target.local) && enemyVector[k].life != 0)
                 target = enemyVector[k]
         }
-        if (target) {
-            var angle = Math.atan2(target.y - this.y, target.x - this.x)
-            if (angle <= Math.PI/8 && angle > -Math.PI/8)
-                this.dir = 0
-            else if (angle <= 3*Math.PI/8 && angle > Math.PI/8)
-                this.dir = 7
-            else if (angle <= 5*Math.PI/8 && angle > 3*Math.PI/8)
-                this.dir = 6
-            else if (angle <= 7*Math.PI/8 && angle > 5*Math.PI/8)
-                this.dir = 5
-            else if (angle > 7*Math.PI/8 || angle <= -7*Math.PI/8)
-                this.dir = 4
-            else if (angle <= -5*Math.PI/8 && angle > -7*Math.PI/8)
-                this.dir = 3
-            else if (angle <= -3*Math.PI/8 && angle > -5*Math.PI/8)
-                this.dir = 2
-            else if (angle <= -Math.PI/8 && angle > -3*Math.PI/8)
-                this.dir = 1
-        }
         if (!this.ready) {
             this.time = Math.max(0, this.time-dt)
             if (this.time == 0) this.ready = true
@@ -281,7 +294,7 @@ class Tower {
             this.shot(target)
     }
     draw(ctx) {
-        if (Cursor.isAt(this.x, this.y, 1, 1)) {
+        if (Cursor.isAt(this.x, this.y, 1, 1) || UI.selTower == this.name) {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.range, 0, 2 * Math.PI, false);
             ctx.fillStyle = Op2;
@@ -301,7 +314,7 @@ class Tower {
 }
 
 class Bullet {
-    constructor(x, y, type, name, target) {
+    constructor(x, y, type, name, target, damage) {
         this.x = x
         this.y = y
         this.angle = 0
@@ -309,6 +322,7 @@ class Bullet {
         this.target = target
         this.speed = 4
         this.name = name
+        this.damage = damage
         this.size = [BULLETSIZE[type][0], BULLETSIZE[type][1]]
         var frames = (type == FLAMETHROWER)? 2 : 1
         this.size[1] /= frames
@@ -321,14 +335,17 @@ class Bullet {
         this.anim.update(dt)
         var dx = this.target.x - this.x
         var dy = this.target.y - this.y
-        this.angle = Math.atan2(dy, dx)
+        if (this.type == MATTER)
+            this.angle += (Math.PI/36)%(2*Math.PI)
+        else
+            this.angle = Math.atan2(dy, dx)
         var dist = Math.sqrt(dx*dx + dy*dy)
         this.x += dx*this.speed/dist
         this.y += dy*this.speed/dist
         if (this.target.x == -1)
             Game.del(this.name, 2)
         else if (dist < this.target.quad.h/2) {
-            this.target.life -= 20
+            this.target.life -= this.damage
             Game.del(this.name, 2)
         }
     }
@@ -355,8 +372,8 @@ var Cursor = {
     update(dt) {
         this.px = Math.min(pwidth-1, Math.max(0, Math.floor(Game.mousePos[0]/pixelSize)))
         this.py = Math.min(pheight-1, Math.max(0, Math.floor(Game.mousePos[1]/pixelSize)))
-        this.x = this.px*pixelSize + pixelSize/2
-        this.y = this.py*pixelSize + pixelSize/2
+        this.x = this.px*pixelSize + pixelSize/3
+        this.y = this.py*pixelSize + pixelSize/3
     },
     draw(ctx) {
         var x = pixelSize*this.px
@@ -374,11 +391,11 @@ var Cursor = {
         this.towerQuad = new Quad(TOWERPATH[id], 0, 0, this.defaultSize[0], this.defaultSize[1], 8, 3)
         this.tower = id
     },
-    putTower() {
+    click() {
         if (this.tower != -1) {
-            if (map[this.py][this.px] == -1 && MAPS[actualMap][this.py][this.px] == 0) {
+            if (map[this.py][this.px] == -1 && MAPS[actualMap][this.py][this.px] == 0 && this.px < pwidth-uiWidth) {
                 console.log("PUT")
-                var tower = new Tower(this.tower, pixelSize*this.px+16, pixelSize*this.py+16, this.defaultSize[0], this.defaultSize[1])
+                var tower = new Tower(this.tower, pixelSize*this.px+16, pixelSize*this.py+16, this.defaultSize[0], this.defaultSize[1], towerCounter)
                 map[this.py][this.px] = towerCounter
                 Game.add(tower, "Tower_" + towerCounter, 1)
                 towerCounter++
@@ -387,6 +404,8 @@ var Cursor = {
             else
                 console.log("You can't put your tower here!!")
         }
+        else
+            UI.selTower = map[this.py][this.px]
     },
     cancel() {
         this.tower = -1
@@ -395,6 +414,95 @@ var Cursor = {
         var px = Math.floor(x/pixelSize)
         var py = Math.floor(y/pixelSize)
         return this.px >= px && this.px < px+w && this.py >= py && this.py < py+h
+    }
+}
+
+var UI = {
+    start() {
+        this.bg = new Rectangle(18*pixelSize, 0, uiWidth*pixelSize, 16*pixelSize, Bl)
+        this.shopButtons = newArray(7, (i) => {
+            return new Button(ICONPATH[i], (18 + i%2)*pixelSize + 2*(i%2 + 1)*pixelSize/3, (1 + Math.floor(i/2))*pixelSize + 2*(Math.floor(i/2)*pixelSize/3), () => {
+                console.log(SHOPNAMES[i])
+                Cursor.getTower(i)
+            })
+        })
+        this.shopButtons[7] = new Button("assets/icons/cancel.png", 19*pixelSize + 4/3*pixelSize, 6*pixelSize, () => {
+            console.log("CANCEL")
+            Cursor.cancel()
+        })
+        this.upgrade = new Button("assets/icons/upgrade.png", 20*pixelSize, 13*pixelSize, () => {
+            this.tower.upgrade()
+        })
+        this.lastSelTower = -1
+        this.selTower = -1
+        this.tower = -1
+        this.selTowerSprite = new Sprite("")
+        this.selTowerRank = new Sprite("")
+        this.levelText = new Text(0, 0, () => {
+            return "Level:       " + UI.tower.level
+        }, Wh, "30px bitOperator")
+        this.rangeText = new Text(0, 0, () => {
+            return "Range:    " + UI.tower.range
+        }, Wh, "30px bitOperator")
+        this.damageText = new Text(0, 0, () => {
+            return "Damage:   " + UI.tower.damage
+        }, Wh, "30px bitOperator")
+        this.money = 0
+        this.moneyText = new Text(0, 0, () => {
+            return "Money:  " + this.money
+        }, Wh, "30px bitOperator")
+    },
+    draw(ctx) {
+        this.bg.draw(ctx)
+        for (var i = 0; i < 8; i++)
+            this.shopButtons[i].draw(ctx)
+        if (this.selTower != -1) {
+            this.selTowerSprite.img.src = ICONPATH[this.tower.type]
+            this.selTowerRank.img.src = RANKPATH[this.tower.level-1]
+            this.selTowerSprite.drawSpriteAt(ctx, 19*pixelSize, 8*pixelSize);
+            this.selTowerRank.drawSpriteAt(ctx, 20*pixelSize, 8*pixelSize)
+            this.upgrade.draw(ctx)
+            ctx.save()
+            ctx.translate(18.5*pixelSize, 10*pixelSize)
+            ctx.save()
+            ctx.scale(0.5, 0.5)
+            this.levelText.draw(ctx)
+            ctx.restore()
+            ctx.translate(0, pixelSize/2)
+            ctx.save()
+            ctx.scale(0.5, 0.5)
+            this.rangeText.draw(ctx)
+            ctx.restore()
+            ctx.translate(0, pixelSize/2)
+            ctx.save()
+            ctx.scale(0.5, 0.5)
+            this.damageText.draw(ctx)
+            ctx.restore()
+            ctx.restore()
+        }
+        ctx.save()
+        ctx.translate(18.5*pixelSize, 15.5*pixelSize)
+        ctx.scale(0.5, 0.5)
+        this.moneyText.draw(ctx)
+        ctx.restore()
+
+    },
+    update(dt) {
+        if (this.lastSelTower != this.selTower && this.selTower != -1)
+            this.tower = Game.get("Tower_" + this.selTower, 1)
+        this.lastSelTower = this.selTower
+    },
+    push(canvas) {
+        var mem = false
+        for (var i = 0; i < 8; i++) {
+            if (this.shopButtons[i].push(canvas))
+                mem = true
+        }
+        if (this.selTower != -1) {
+            if (this.upgrade.push(canvas))
+                mem = true
+        }
+        return mem
     }
 }
 
@@ -428,28 +536,16 @@ var map = newArray(pheight, (i) => {
 
 var Game = new Canvas("game", rwidth, rheight)
 
-var shopButtons = newArray(7, (i) => {
-    return new Button(ICONPATH[i], (14 + i%4)*pixelSize, (14 + Math.floor(i/4))*pixelSize, () => {
-        console.log(SHOPNAMES[i])
-        Cursor.getTower(i)
-    })
-})
-
-shopButtons[7] = new Button("assets/icons/cancel.png", 17*pixelSize, 15*pixelSize, () => {
-    console.log("CANCEL")
-    Cursor.cancel()
-})
-
 var pathQuad = new Quad("assets/TileCraftSet/Tiles2.png", 0, 0, 32, 32, 9, 2)
 
 var floor = newArray(pheight, (i) => {
-    return newArray(pwidth, (j) => {
+    return newArray(pwidth-uiWidth, (j) => {
         return new Tile(pixelSize*j, pixelSize*i, pathQuad, 11+Math.floor(Math.random()*3))
     })
 })
 
 for (var i = 0; i < pheight; i++) {
-    for (var j = 0; j < pwidth; j++) {
+    for (var j = 0; j < pwidth-uiWidth; j++) {
         if (MAPS[actualMap][i][j] == 1) {
             var ctr = 0
             for (var k = 3; k >= 0; k--) {
@@ -465,18 +561,18 @@ function main() {
     Game.setDrawInterval(10)
     Game.setUpdateInterval(10)
     Game.setInputInterval(10)
-    Game.addLayer(2)
+    Game.addLayer(3)
     Game.setLayerProp(1, "sort", true)
     for (var i = 0; i < pheight; i++) {
-        for (var j = 0; j < pwidth; j++)
+        for (var j = 0; j < pwidth-uiWidth; j++)
             Game.add(floor[i][j], "Floor_" + i + "_" + j)
     }
-    for (var i = 0; i < 8; i++)
-        Game.add(shopButtons[i], "B_" + SHOPNAMES[i] + "Icon")
+    Game.add(UI, "B_UI", 3)
     Game.add(Cursor, "Cursor", 1)
     Game.add(Spawner, "Spawner")
     //Game.bind(90, () => { }, KEY_DOWN)
-    Game.bindClick("PutTower", () => { Cursor.putTower() })
+    Game.bind(27, () => { Cursor.cancel() }, KEY_DOWN)
+    Game.bindClick("CursorClick", () => { Cursor.click() })
 }
 
 window.onload = main
