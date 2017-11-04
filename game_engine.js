@@ -81,21 +81,34 @@ class Button {
 }
 
 class Text {
-    constructor(x, y, text, col, font) {
+    constructor(x, y, text, col, font, sizeMult=[1, 1]) {
         this.x = x;
         this.y = y;
         this.text = text;
         this.col = col;
         this.font = font;
+        this.sizeMult = sizeMult
     }
     start() {}
     draw(ctx) {
         ctx.font = this.font;
         ctx.fillStyle = this.col;
-        if (typeof this.text == "string")
+        if (this.sizeMult[0] != 1 && this.sizeMult[1] != 1) {
+            ctx.save()
+            ctx.translate(this.x, this.y)
+            ctx.scale(this.sizeMult[0], this.sizeMult[1])
+            if (typeof this.text == "string")
+                ctx.fillText(this.text, 0, 0);
+            else
+                ctx.fillText(this.text(), 0, 0);
+            ctx.restore()
+        }
+        else {
+            if (typeof this.text == "string")
             ctx.fillText(this.text, this.x, this.y);
-        else
+            else
             ctx.fillText(this.text(), this.x, this.y);
+        }
     }
 }
 
@@ -107,6 +120,7 @@ class Sprite {
         this.img.src = src;
     }
     start() {}
+    update(dt) {}
     draw(ctx) {
         ctx.drawImage(this.img, this.x, this.y);
     }

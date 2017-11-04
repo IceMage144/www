@@ -8,9 +8,9 @@ var rheight = pheight*pixelSize
 var rwidth = pwidth*pixelSize
 
 var uiWidth = 4
-var towerCounter = 0
-var enemyCounter = 0
-var bulletCounter = 0
+var towerCounter = 1
+var enemyCounter = 1
+var bulletCounter = 1
 var actualMap = 0
 
 var enemyVector = {}
@@ -80,6 +80,16 @@ const RANKPATH = [
     "assets/icons/rank-1.png",
     "assets/icons/rank-2.png",
     "assets/icons/rank-3.png"
+]
+
+const TOWERINFOS = [
+    {damage : [5, 7, 10], range : [100, 100, 100], fireSpeed : [700, 700, 700], cost : [1000, 500, 1000]},
+    {damage : [0.5, 0.6, 0.7], range : [50, 50, 50], fireSpeed : [100, 100, 100], cost : [1000, 500, 1000]},
+    {damage : [2, 3, 4], range : [150, 150, 150], fireSpeed : [500, 500, 500], cost : [1000, 500, 1000]},
+    {damage : [0.5, 0.6, 0.7], range : [150, 150, 150], fireSpeed : [100, 100, 100], cost : [1000, 500, 1000]},
+    {damage : [2, 3, 4], range : [150, 150, 150], fireSpeed : [300, 300, 300], cost : [1000, 500, 1000]},
+    {damage : [4, 5, 7], range : [150, 150, 150], fireSpeed : [600, 600, 600], cost : [1000, 500, 1000]},
+    {damage : [4, 5, 7], range : [100, 100, 100], fireSpeed : [400, 400, 400], cost : [1000, 500, 1000]}
 ]
 
 const TILEMAP = {
@@ -168,6 +178,12 @@ function bisect(list, pos, speed) {
     return [x, y, dir]
 }
 
+function posToTile(x, y) {
+    var px = Math.floor(x/pixelSize)
+    var py = Math.floor(y/pixelSize)
+    return [px, py]
+}
+
 class Tile {
     constructor(x, y, q, frame) {
         // 0 => right; 1 => up; 2 => left; 3 => down
@@ -189,7 +205,8 @@ class Enemy {
         this.quad = new Quad(path, 0, 0, w, h, 6, 4)
         this.lbbg = new Rectangle(0, 0, 32, 4, Rd)
         this.lb = new Rectangle(0, 0, 32, 4, Lg)
-        this.life = 100
+        this.maxLife = 20
+        this.life = this.maxLife
         this.x = x
         this.y = y
         this.dir = 3
@@ -214,8 +231,8 @@ class Enemy {
             this.anims[this.dir].start()
         this.anims[this.dir].update(dt)
         this.prevDir = this.dir
-        this.life = Math.min(100, Math.max(0, this.life))
-        this.lb.w = this.life*0.32
+        this.life = Math.min(this.maxLife, Math.max(0, this.life))
+        this.lb.w = this.life*32/this.maxLife
         if (this.life == 0 || this.x == -1) {
             Game.del(this.name, 1)
             delete enemyVector[this.name]
@@ -241,12 +258,13 @@ class Tower {
         this.y = y
         this.dir = 6
         this.level = 1
-        this.time = 500
-        this.timer = 500
+        this.damage = TOWERINFOS[this.type].damage[0]
+        this.range = TOWERINFOS[this.type].range[0]
+        this.timer = TOWERINFOS[this.type].fireSpeed[0]
+        this.time = this.timer
         this.ready = false
-        this.range = 150
-        this.damage = 20
         this.name = name
+        this.accMoney = TOWERINFOS[this.type].cost[0]
     }
     start() {}
     shot(target) {
@@ -306,10 +324,23 @@ class Tower {
         this.quad.drawFrameAt(ctx, this.dir+8*(this.level-1), this.x-pixelSize, this.y-this.quad.h+pixelSize/2)
     }
     upgrade() {
-        if (this.level < 3)
+        if (this.level < 3) {
+            this.damage = TOWERINFOS[this.type].damage[this.level]
+            this.range = TOWERINFOS[this.type].range[this.level]
+            this.timer = TOWERINFOS[this.type].fireSpeed[this.level]
+            UI.money -= TOWERINFOS[this.type].cost[this.level]
+            this.accMoney += TOWERINFOS[this.type].cost[this.level]
             this.level++
+        }
         else
             console.log("You can't upgrade this tower anymore!!")
+    }
+    sell() {
+        var [px, py] = posToTile(this.x, this.y)
+        UI.money += Math.floor(this.accMoney*0.7)
+        UI.selTower = -1
+        map[py][px] = -1
+        Game.del("Tower_" + this.name, 1)
     }
 }
 
@@ -399,13 +430,14 @@ var Cursor = {
                 map[this.py][this.px] = towerCounter
                 Game.add(tower, "Tower_" + towerCounter, 1)
                 towerCounter++
+                UI.money -= TOWERINFOS[this.tower].cost[0]
                 this.tower = -1
             }
             else
                 console.log("You can't put your tower here!!")
         }
         else
-            UI.selTower = map[this.py][this.px]
+            UI.selectTower(map[this.py][this.px])
     },
     cancel() {
         this.tower = -1
@@ -430,79 +462,87 @@ var UI = {
             console.log("CANCEL")
             Cursor.cancel()
         })
+        this.shopButtonLables = newArray(7, (i) => {
+            return new Text(this.shopButtons[i].x,
+                            this.shopButtons[i].y + 5*pixelSize/4,
+                            "" + TOWERINFOS[i].cost[0],
+                            Wh,
+                            "30px bitOperator",
+                            [0.5, 0.5])
+        })
         this.upgrade = new Button("assets/icons/upgrade.png", 20*pixelSize, 13*pixelSize, () => {
             this.tower.upgrade()
         })
-        this.lastSelTower = -1
-        this.selTower = -1
-        this.tower = -1
+        this.upgradeLabel = new Text(this.upgrade.x, this.upgrade.y + 5/4*pixelSize, () => {
+            return "" + TOWERINFOS[UI.tower.type].cost[UI.tower.level]
+        }, Wh, "30px bitOperator", [0.5, 0.5])
+        this.sell = new Button("assets/icons/cash.png", 19*pixelSize, 13*pixelSize, () => {
+            this.tower.sell()
+        })
+        this.sellLabel = new Text(this.sell.x, this.sell.y + 5/4*pixelSize, () => {
+            return "" + UI.tower.accMoney*0.7
+        }, Wh, "30px bitOperator", [0.5, 0.5])
+        this.selTower = false
+        this.tower = false
         this.selTowerSprite = new Sprite("")
         this.selTowerRank = new Sprite("")
-        this.levelText = new Text(0, 0, () => {
-            return "Level:       " + UI.tower.level
-        }, Wh, "30px bitOperator")
-        this.rangeText = new Text(0, 0, () => {
+        this.fireSpeedText = new Text(18.5*pixelSize, 10*pixelSize, () => {
+            return "Fire Speed: " + UI.tower.timer
+        }, Wh, "30px bitOperator", [0.5, 0.5])
+        this.rangeText = new Text(18.5*pixelSize, 10.5*pixelSize, () => {
             return "Range:    " + UI.tower.range
-        }, Wh, "30px bitOperator")
-        this.damageText = new Text(0, 0, () => {
+        }, Wh, "30px bitOperator", [0.5, 0.5])
+        this.damageText = new Text(18.5*pixelSize, 11*pixelSize, () => {
             return "Damage:   " + UI.tower.damage
-        }, Wh, "30px bitOperator")
+        }, Wh, "30px bitOperator", [0.5, 0.5])
         this.money = 0
-        this.moneyText = new Text(0, 0, () => {
+        this.moneyText = new Text(18.5*pixelSize, 15.5*pixelSize, () => {
             return "Money:  " + this.money
-        }, Wh, "30px bitOperator")
+        }, Wh, "30px bitOperator", [0.5, 0.5])
     },
     draw(ctx) {
         this.bg.draw(ctx)
-        for (var i = 0; i < 8; i++)
+        for (var i = 0; i < 7; i++) {
             this.shopButtons[i].draw(ctx)
-        if (this.selTower != -1) {
+            this.shopButtonLables[i].draw(ctx)
+        }
+        this.shopButtons[7].draw(ctx)
+        if (this.selTower) {
             this.selTowerSprite.img.src = ICONPATH[this.tower.type]
             this.selTowerRank.img.src = RANKPATH[this.tower.level-1]
             this.selTowerSprite.drawSpriteAt(ctx, 19*pixelSize, 8*pixelSize);
             this.selTowerRank.drawSpriteAt(ctx, 20*pixelSize, 8*pixelSize)
             this.upgrade.draw(ctx)
-            ctx.save()
-            ctx.translate(18.5*pixelSize, 10*pixelSize)
-            ctx.save()
-            ctx.scale(0.5, 0.5)
-            this.levelText.draw(ctx)
-            ctx.restore()
-            ctx.translate(0, pixelSize/2)
-            ctx.save()
-            ctx.scale(0.5, 0.5)
+            this.upgradeLabel.draw(ctx)
+            this.sell.draw(ctx)
+            this.sellLabel.draw(ctx)
+            this.fireSpeedText.draw(ctx)
             this.rangeText.draw(ctx)
-            ctx.restore()
-            ctx.translate(0, pixelSize/2)
-            ctx.save()
-            ctx.scale(0.5, 0.5)
             this.damageText.draw(ctx)
-            ctx.restore()
-            ctx.restore()
         }
-        ctx.save()
-        ctx.translate(18.5*pixelSize, 15.5*pixelSize)
-        ctx.scale(0.5, 0.5)
         this.moneyText.draw(ctx)
-        ctx.restore()
-
     },
-    update(dt) {
-        if (this.lastSelTower != this.selTower && this.selTower != -1)
-            this.tower = Game.get("Tower_" + this.selTower, 1)
-        this.lastSelTower = this.selTower
+    update(dt) {},
+    selectTower(id) {
+        if (id != -1) {
+            this.selTower = id
+            this.tower = Game.get("Tower_" + id, 1)
+        }
+        else {
+            this.selTower = false
+            this.tower = false
+        }
     },
     push(canvas) {
-        var mem = false
         for (var i = 0; i < 8; i++) {
             if (this.shopButtons[i].push(canvas))
-                mem = true
+                return true
         }
-        if (this.selTower != -1) {
-            if (this.upgrade.push(canvas))
-                mem = true
+        if (this.selTower) {
+            if (this.upgrade.push(canvas) || this.sell.push(canvas))
+                return true
         }
-        return mem
+        return false
     }
 }
 
@@ -556,6 +596,7 @@ for (var i = 0; i < pheight; i++) {
         }
     }
 }
+
 
 function main() {
     Game.setDrawInterval(10)
