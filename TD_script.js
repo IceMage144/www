@@ -586,7 +586,7 @@ var map = newArray(pheight, (i) => {
 
 var Game = new Canvas("game", rwidth, rheight)
 
-var pathQuad = new Quad("assets/TileCraftSet/Tiles2.png", 0, 0, 32, 32, 9, 2)
+var pathQuad = new Quad("assets/TileCraftSet/Tiles.png", 0, 0, 32, 32, 9, 2)
 
 var floor = newArray(pheight, (i) => {
     return newArray(pwidth-uiWidth, (j) => {
@@ -607,11 +607,19 @@ for (var i = 0; i < pheight; i++) {
     }
 }
 
+var Dim = new Rectangle(0, 0, rwidth, rheight, Op2);
+var MenuBg = new Rectangle(0, 0, rwidth, rheight, Cr);
+var Title = new Text((rwidth-510)/2, 150, "Monster Invasion", Wh, "50px bitOperatorBold");
+var Paused = new Text((rwidth-200)/2, 150, "Paused", Wh, "50px bitOperator");
+var Play = new Button("assets/Play.png", (rwidth-160)/2, 280, startGame);
+var Restart = new Button("assets/Restart.png", (rwidth-192)/2, 160, showMenu);
 
-function main() {
+function startGame() {
+    Game.reset()
+    enemyVector = {}
+    Game.ingame = true
     Game.setDrawInterval(10)
     Game.setUpdateInterval(10)
-    Game.setInputInterval(10)
     Game.addLayer(3)
     Game.setLayerProp(1, "sort", true)
     for (var i = 0; i < pheight; i++) {
@@ -624,6 +632,47 @@ function main() {
     //Game.bind(90, () => { }, KEY_DOWN)
     Game.bind(27, () => { Cursor.cancel() }, KEY_DOWN)
     Game.bindClick("CursorClick", () => { Cursor.click() })
+}
+
+function gameover() {
+    console.log("Hey")
+    Game.add(Dim, "Dim", 3)
+    Game.add(Restart, "B_Restart", 3)
+    Game.draw()
+    Game.stopDraw()
+    Game.stopUpdate()
+    Game.ingame = false
+}
+
+function pause() {
+    if (!Game.paused) {
+        Game.add(Dim, "Dim", 3)
+        Game.add(Paused, "Paused", 3)
+        Game.stopDraw()
+        Game.stopUpdate()
+        Game.paused = true
+    }
+    else {
+        Game.del("Dim", 3)
+        Game.del("Paused", 3)
+        Game.setDrawInterval(10)
+        Game.setUpdateInterval(10)
+        Game.paused = false
+    }
+}
+
+function showMenu() {
+    Game.reset()
+    Game.add(MenuBg, "Background")
+    Game.add(Title, "Title")
+    Game.add(Play, "B_Play")
+}
+
+function main() {
+    Game.setInputInterval(10)
+    Game.bind(80, function() { if (Game.ingame) pause(); }, KEY_DOWN)
+    Game.bind(90, function() { if (Game.ingame) gameover(); }, KEY_DOWN)
+    showMenu()
 }
 
 window.onload = main

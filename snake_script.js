@@ -132,7 +132,7 @@ var Score = new Text(30, 50, function() {
 }, Bl, "30px bitOperator");
 
 var Background = new Rectangle(0, 0, rwidth, rheight, Wh);
-var Dim = new Rectangle(0, 0, rwidth, rheight, Op);
+var Dim = new Rectangle(0, 0, rwidth, rheight, Op2);
 var MenuBg = new Rectangle(0, 0, rwidth, rheight, Ag);
 
 var Easy = new Button("assets/Easy.png", (rwidth-160)/2, 230, startGame, 0);

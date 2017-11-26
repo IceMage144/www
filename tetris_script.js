@@ -327,7 +327,7 @@ var Title = new Text((rwidth-200)/2, 110, "Tetris", Bl, "50px bitOperatorBold");
 var Paused = new Text((rwidth-200)/2, 110, "Paused", Bl, "50px bitOperator");
 
 var Background = new Rectangle(0, 0, rwidth, rheight, Me);
-var Dim = new Rectangle(0, 0, rwidth, rheight, Op);
+var Dim = new Rectangle(0, 0, rwidth, rheight, Op2);
 var MenuBg = new Rectangle(0, 0, rwidth, rheight, Me);
 
 var Play = new Button("assets/Play.png", (rwidth-160)/2, 230, startGame);

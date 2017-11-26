@@ -90,6 +90,7 @@ class Text {
         this.sizeMult = sizeMult
     }
     start() {}
+    update(dt) {}
     draw(ctx) {
         ctx.font = this.font;
         ctx.fillStyle = this.col;
@@ -265,6 +266,7 @@ class Canvas {
     }
     reset() {
         this.layers = [new Layer()]
+        this.numLayers = 1
         this.ctx.clearRect(0, 0, this.width, this.height);
     }
     stopDraw() {
@@ -300,6 +302,7 @@ class Canvas {
         }
     }
     setLayerProp(layer, prop, val) {
+        console.log(layer)
         this.layers[layer][prop] = val
     }
     draw() {
@@ -335,18 +338,20 @@ class Canvas {
         }
     }
     click() {
-        for (let l = 0; l < this.numLayers; l++) {
-            for (let k in this.layers[l].objs) {
-                if (k.indexOf("B_") != -1) {
-                    if (!(k in this.layers[l].objs))
-                        continue;
-                    if (this.layers[l].objs[k].push(this))
-                        return;
+        if (!this.paused) {
+            for (let l = 0; l < this.numLayers; l++) {
+                for (let k in this.layers[l].objs) {
+                    if (k.indexOf("B_") != -1) {
+                        if (!(k in this.layers[l].objs))
+                            continue;
+                        if (this.layers[l].objs[k].push(this))
+                            return;
+                    }
                 }
             }
+            for (let k in this.clickFuncs)
+                this.clickFuncs[k]()
         }
-        for (let k in this.clickFuncs)
-            this.clickFuncs[k]()
     }
     resize(num) {
         pixelSize += num;

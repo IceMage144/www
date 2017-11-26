@@ -345,7 +345,7 @@ var Money = new Text(30, 100, function() {
 }, Wh, "30px bitOperator");
 
 var Background = new Rectangle(0, 0, rwidth, rheight, Bl);
-var Dim = new Rectangle(0, 0, rwidth, rheight, Op);
+var Dim = new Rectangle(0, 0, rwidth, rheight, Op2);
 var MenuBg = new Rectangle(0, 0, rwidth, rheight, Bl);
 
 var Play = new Button("assets/Play.png", (rwidth-160)/2, 280, startGame);
