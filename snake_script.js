@@ -124,12 +124,12 @@ var Apple = {
 
 var Game = new Canvas("game", rwidth, rheight);
 
-var Title = new Text(170, 110, "Snake", Bl, "50px bitOperatorBold");
-var Paused = new Text((rwidth-200)/2, 110, "Paused", Bl, "50px bitOperator");
+var Title = new Text(170, 110, "Snake", Bl, "50px magicPixelBold");
+var Paused = new Text((rwidth-200)/2, 110, "Paused", Bl, "50px magicPixel");
 var Score = new Text(30, 50, function() {
     let score = (Snake.body.size - 5)*100;
     return "Score: " + score.toString();
-}, Bl, "30px bitOperator");
+}, Bl, "30px magicPixel");
 
 var Background = new Rectangle(0, 0, rwidth, rheight, Wh);
 var Dim = new Rectangle(0, 0, rwidth, rheight, Op2);

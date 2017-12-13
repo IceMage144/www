@@ -304,7 +304,7 @@ var Gui = {
         this.next.start();
         this.text = new Text(224, 256, function() {
             return "Score: " + Gui.score;
-        }, Bl, "30px bitOperator");
+        }, Bl, "30px magicPixel");
         this.bg = new Rectangle(256, 64, 96, 96, Wh);
     },
     getNext() {
@@ -323,8 +323,8 @@ var Gui = {
 
 var Game = new Canvas("game", rwidth, rheight);
 
-var Title = new Text((rwidth-200)/2, 110, "Tetris", Bl, "50px bitOperatorBold");
-var Paused = new Text((rwidth-200)/2, 110, "Paused", Bl, "50px bitOperator");
+var Title = new Text((rwidth-200)/2, 110, "Tetris", Bl, "50px magicPixelBold");
+var Paused = new Text((rwidth-200)/2, 110, "Paused", Bl, "50px magicPixel");
 
 var Background = new Rectangle(0, 0, rwidth, rheight, Me);
 var Dim = new Rectangle(0, 0, rwidth, rheight, Op2);

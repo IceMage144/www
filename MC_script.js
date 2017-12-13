@@ -331,18 +331,18 @@ var LevelManager = {
 
 var Game = new Canvas("game", rwidth, rheight);
 
-var Title1 = new Text((rwidth-210)/2, 110, "Missile", Wh, "50px bitOperatorBold");
-var Title2 = new Text((rwidth-260)/2, 160, "Command", Wh, "50px bitOperatorBold");
-var Paused = new Text((rwidth-200)/2, 110, "Paused", Wh, "50px bitOperator");
+var Title1 = new Text((rwidth-210)/2, 110, "Missile", Wh, "50px magicPixelBold");
+var Title2 = new Text((rwidth-260)/2, 160, "Command", Wh, "50px magicPixelBold");
+var Paused = new Text((rwidth-200)/2, 110, "Paused", Wh, "50px magicPixel");
 var Score = new Text(30, 50, function() {
     return "Score: " + LevelManager.score;
-}, Wh, "30px bitOperator");
+}, Wh, "30px magicPixel");
 var Level = new Text(rwidth-200, 50, function() {
     return "Level " + LevelManager.level;
-}, Wh, "30px bitOperator");
+}, Wh, "30px magicPixel");
 var Money = new Text(30, 100, function() {
     return "Money: " + LevelManager.money;
-}, Wh, "30px bitOperator");
+}, Wh, "30px magicPixel");
 
 var Background = new Rectangle(0, 0, rwidth, rheight, Bl);
 var Dim = new Rectangle(0, 0, rwidth, rheight, Op2);

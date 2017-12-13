@@ -12,6 +12,11 @@ var towerCounter = 1
 var enemyCounter = 1
 var bulletCounter = 1
 var actualMap = 0
+var uTime = 10
+var iTime = 10
+var dTime = 10
+
+var flag = false
 
 var enemyVector = {}
 
@@ -205,7 +210,7 @@ class Enemy {
         this.quad = new Quad(path, 0, 0, w, h, 6, 4)
         this.lbbg = new Rectangle(0, 0, 32, 4, Rd)
         this.lb = new Rectangle(0, 0, 32, 4, Lg)
-        this.maxLife = 20
+        this.maxLife = 10
         this.life = this.maxLife
         this.x = x
         this.y = y
@@ -233,10 +238,15 @@ class Enemy {
         this.prevDir = this.dir
         this.life = Math.min(this.maxLife, Math.max(0, this.life))
         this.lb.w = this.life*32/this.maxLife
-        if (this.life == 0 || this.x == -1) {
+        if (this.life == 0) {
             Game.del(this.name, 1)
             delete enemyVector[this.name]
             UI.money += 100
+        }
+        else if (this.x == -1) {
+            Game.del(this.name, 1)
+            delete enemyVector[this.name]
+            UI.lives -= 1
         }
     }
     move(dx, dy) {
@@ -429,11 +439,16 @@ var Cursor = {
         if (this.tower != -1) {
             if (map[this.py][this.px] == -1 && MAPS[actualMap][this.py][this.px] == 0 && this.px < pwidth-uiWidth) {
                 console.log("PUT")
-                var tower = new Tower(this.tower, pixelSize*this.px+16, pixelSize*this.py+16, this.defaultSize[0], this.defaultSize[1], towerCounter)
-                map[this.py][this.px] = towerCounter
-                Game.add(tower, "Tower_" + towerCounter, 1)
-                towerCounter++
-                UI.money -= TOWERINFOS[this.tower].cost[0]
+                if (UI.money >= TOWERINFOS[this.tower].cost[0]) {
+                    var tower = new Tower(this.tower, pixelSize*this.px+16, pixelSize*this.py+16, this.defaultSize[0], this.defaultSize[1], towerCounter)
+                    UI.money -= TOWERINFOS[this.tower].cost[0]
+                    map[this.py][this.px] = towerCounter
+                    Game.add(tower, "Tower_" + towerCounter, 1)
+                    towerCounter++
+                }
+                else {
+                    console.log("You don't have enough money to by a tower!")
+                }
                 this.tower = -1
             }
             else
@@ -454,15 +469,15 @@ var Cursor = {
 
 var UI = {
     start() {
-        this.bg = new Sprite("assets/Bronze_UI/MyUI.png", 18*pixelSize, 0)
-        this.selTowerBg = new Sprite("assets/Bronze_UI/SelTowerBG.png", 18*pixelSize + 14, 280)
+        this.bg = new Sprite("assets/Bronze_UI/MyUI_v2.png", 18*pixelSize, 0)
+        this.selTowerBg = new Sprite("assets/Bronze_UI/SelTowerBG.png", 18*pixelSize + 14, 292)
         this.shopButtons = newArray(7, (i) => {
-            return new Button(ICONPATH[i], Math.round((18 + i%2)*pixelSize + 2*(i%2 + 1)*pixelSize/3), Math.floor(i/2)*(pixelSize + 2*pixelSize/3 + 5) + pixelSize, () => {
+            return new Button(ICONPATH[i], (18 + i%3)*pixelSize + (i%3 + 3)*4, Math.floor(i/3)*(Math.round(5*pixelSize/3) + 6) + 7*pixelSize/2 + 1, () => {
                 console.log(SHOPNAMES[i])
                 Cursor.getTower(i)
             })
         })
-        this.shopButtons[7] = new Button("assets/icons/cancel.png", 19*pixelSize + 4/3*pixelSize, 6*pixelSize + 15, () => {
+        this.shopButtons[7] = new Button("assets/icons/cancel.png", 20.5*pixelSize + 4, 7.25*pixelSize - 1, () => {
             console.log("CANCEL")
             Cursor.cancel()
         })
@@ -471,39 +486,53 @@ var UI = {
                             this.shopButtons[i].y + 11*pixelSize/8 + 1,
                             "" + TOWERINFOS[i].cost[0],
                             Wh,
-                            "30px bitOperator",
+                            "30px magicPixel",
                             [0.4, 0.4])
         })
-        this.upgradeOn = new Button("assets/icons/upgrade-on.png", 20*pixelSize + 2, 12.75*pixelSize - 2, () => {
+        this.upgradeOn = new Button("assets/icons/upgrade-on.png", 20*pixelSize + 2, 13*pixelSize - 4, () => {
             this.tower.upgrade()
         })
-        this.upgradeOff = new Sprite("assets/icons/upgrade-off.png", 20*pixelSize + 2, 12.75*pixelSize - 2)
+        this.upgradeOff = new Sprite("assets/icons/upgrade-off.png", 20*pixelSize + 2, 13*pixelSize - 4)
         this.upgradeLabel = new Text(this.upgradeOn.x + 2, this.upgradeOn.y + 11/8*pixelSize + 1, () => {
             return (UI.tower.canUpgrade()? "" + TOWERINFOS[UI.tower.type].cost[UI.tower.level] : "")
-        }, Wh, "30px bitOperator", [0.4, 0.4])
-        this.sell = new Button("assets/icons/cash.png", 19*pixelSize - 2, 12.75*pixelSize - 2, () => {
+        }, Wh, "30px magicPixel", [0.4, 0.4])
+        this.sell = new Button("assets/icons/cash.png", 19*pixelSize - 2, 13*pixelSize - 4, () => {
             this.tower.sell()
         })
         this.sellLabel = new Text(this.sell.x + 2, this.sell.y + 11/8*pixelSize + 1, () => {
             return "" + UI.tower.accMoney*0.7
-        }, Wh, "30px bitOperator", [0.4, 0.4])
+        }, Wh, "30px magicPixel", [0.4, 0.4])
         this.selTower = false
         this.tower = false
         this.selTowerSprite = new Sprite("")
         this.selTowerRank = new Sprite("")
-        this.fireSpeedText = new Text(18.5*pixelSize, 11*pixelSize - 3, () => {
+        this.fireSpeedText = new Text(18.5*pixelSize, 11.25*pixelSize - 2, () => {
             return "Fire Speed: " + UI.tower.timer
-        }, Wh, "30px bitOperator", [0.4, 0.4])
-        this.rangeText = new Text(18.5*pixelSize, 11.5*pixelSize - 3, () => {
+        }, Wh, "30px magicPixel", [0.4, 0.4])
+        this.rangeText = new Text(18.5*pixelSize, 11.75*pixelSize - 2, () => {
             return "Range:    " + UI.tower.range
-        }, Wh, "30px bitOperator", [0.4, 0.4])
-        this.damageText = new Text(18.5*pixelSize, 12*pixelSize - 3, () => {
+        }, Wh, "30px magicPixel", [0.4, 0.4])
+        this.damageText = new Text(18.5*pixelSize, 12.25*pixelSize - 2, () => {
             return "Damage:   " + UI.tower.damage
-        }, Wh, "30px bitOperator", [0.4, 0.4])
-        this.money = 0
-        this.moneyText = new Text(19.5*pixelSize, 15.5*pixelSize - 2, () => {
+        }, Wh, "30px magicPixel", [0.4, 0.4])
+        this.money = 2000
+        this.moneyText = new Text(19.5*pixelSize, 2.9*pixelSize - 3, () => {
             return "" + this.money
-        }, Wh, "30px bitOperator", [0.5, 0.5])
+        }, Wh, "30px magicPixel", [0.5, 0.5])
+        this.lives = 100
+        this.livesText = new Text(19.5*pixelSize, 2*pixelSize - 2, () => {
+            return "" + this.lives
+        }, Wh, "30px magicPixel", [0.5, 0.5])
+        this.wave = 1
+        this.waveText = new Text(19.5*pixelSize, 1.1*pixelSize - 1, () => {
+            return "" + this.wave
+        }, Wh, "30px magicPixel", [0.5, 0.5])
+        this.pauseWaveButton = new Button("assets/Bronze_UI/pauseWave.png", 19*pixelSize + 2, 15*pixelSize - 7, () => {
+            return 0
+        })
+        this.nextWaveButton = new Button("assets/Bronze_UI/playWave.png", 20*pixelSize + 6, 15*pixelSize - 7, () => {
+            return 0
+        })
     },
     draw(ctx) {
         this.bg.draw(ctx)
@@ -517,8 +546,8 @@ var UI = {
         if (this.selTower) {
             this.selTowerSprite.img.src = ICONPATH[this.tower.type]
             this.selTowerRank.img.src = RANKPATH[this.tower.level-1]
-            this.selTowerSprite.drawSpriteAt(ctx, 19*pixelSize - 2, 9*pixelSize - 2);
-            this.selTowerRank.drawSpriteAt(ctx, 20*pixelSize + 2, 9*pixelSize - 2)
+            this.selTowerSprite.drawSpriteAt(ctx, 19*pixelSize - 2, 9.4*pixelSize - 3)
+            this.selTowerRank.drawSpriteAt(ctx, 20*pixelSize + 2, 9.4*pixelSize - 3)
             if (this.tower && this.tower.canUpgrade())
                 this.upgradeOn.draw(ctx)
             else
@@ -531,6 +560,10 @@ var UI = {
             this.damageText.draw(ctx)
         }
         this.moneyText.draw(ctx)
+        this.livesText.draw(ctx)
+        this.waveText.draw(ctx)
+        this.pauseWaveButton.draw(ctx)
+        this.nextWaveButton.draw(ctx)
     },
     update(dt) {},
     selectTower(id) {
@@ -609,8 +642,8 @@ for (var i = 0; i < pheight; i++) {
 
 var Dim = new Rectangle(0, 0, rwidth, rheight, Op2);
 var MenuBg = new Rectangle(0, 0, rwidth, rheight, Cr);
-var Title = new Text((rwidth-510)/2, 150, "Monster Invasion", Wh, "50px bitOperatorBold");
-var Paused = new Text((rwidth-200)/2, 150, "Paused", Wh, "50px bitOperator");
+var Title = new Text((rwidth-510)/2, 150, "Monster Invasion", Wh, "50px magicPixelBold");
+var Paused = new Text((rwidth-200)/2, 150, "Paused", Wh, "50px magicPixel");
 var Play = new Button("assets/Play.png", (rwidth-160)/2, 280, startGame);
 var Restart = new Button("assets/Restart.png", (rwidth-192)/2, 160, showMenu);
 
@@ -618,8 +651,8 @@ function startGame() {
     Game.reset()
     enemyVector = {}
     Game.ingame = true
-    Game.setDrawInterval(10)
-    Game.setUpdateInterval(10)
+    Game.setDrawInterval(dTime)
+    Game.setUpdateInterval(uTime)
     Game.addLayer(3)
     Game.setLayerProp(1, "sort", true)
     for (var i = 0; i < pheight; i++) {
@@ -655,8 +688,8 @@ function pause() {
     else {
         Game.del("Dim", 3)
         Game.del("Paused", 3)
-        Game.setDrawInterval(10)
-        Game.setUpdateInterval(10)
+        Game.setDrawInterval(dTime)
+        Game.setUpdateInterval(uTime)
         Game.paused = false
     }
 }
@@ -669,9 +702,18 @@ function showMenu() {
 }
 
 function main() {
-    Game.setInputInterval(10)
-    Game.bind(80, function() { if (Game.ingame) pause(); }, KEY_DOWN)
-    Game.bind(90, function() { if (Game.ingame) gameover(); }, KEY_DOWN)
+    Game.setInputInterval(iTime)
+    Game.bind(80, () => { if (Game.ingame) pause(); }, KEY_DOWN)
+    Game.bind(90, () => {
+        if (flag) {
+            Game.setUpdateInterval(uTime)
+            flag = false
+        }
+        else {
+            Game.setUpdateInterval(uTime/2)
+            flag = true
+        }
+    }, KEY_DOWN)
     showMenu()
 }
 

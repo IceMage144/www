@@ -255,12 +255,18 @@ class Canvas {
         addEventListener("click", bindClick, false);
     }
     setDrawInterval(num) {
+        if (this.dInterval)
+            this.stopDraw()
         this.dInterval = setInterval(function(t) { t.draw(); }, num, this);
     }
     setInputInterval(num) {
+        if (this.iInterval)
+            this.stopInput()
         this.iInterval = setInterval(function(t) { t.updateInput(); }, num, this);
     }
     setUpdateInterval(num) {
+        if (this.uInterval)
+            this.stopUpdate()
         this.uInterval = setInterval(function(t) { t.update(); }, num, this);
         this.dt = num
     }
@@ -271,12 +277,15 @@ class Canvas {
     }
     stopDraw() {
         clearInterval(this.dInterval);
+        this.dInterval = false;
     }
     stopInput() {
         clearInterval(this.iInterval);
+        this.iInterval = false;
     }
     stopUpdate() {
         clearInterval(this.uInterval);
+        this.uInterval = false;
     }
     add(e, name, layer=0) {
         if (layer >= this.numLayers || layer < 0)

@@ -1,15 +1,15 @@
 @font-face {
-    font-family: bitOperator;
-    src: local('font/8bitOperatorPlus8-Regular.ttf'),
-         url('font/8bitOperatorPlus8-Regular.ttf');
+    font-family: magicPixel;
+    src: local('font/magic-pixel/Magic-Pixel.ttf'),
+         url('font/magic-pixel/Magic-Pixel.ttf');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
-    font-family: bitOperatorBold;
-    src: local('font/8bitOperatorPlus8-Bold.ttf'),
-         url('font/8bitOperatorPlus8-Bold.ttf');
+    font-family: magicPixelBold;
+    src: local('font/magic-pixel/Magic-Pixel-Bold.ttf'),
+         url('font/magic-pixel/Magic-Pixel-Bold.ttf');
     font-weight: bold;
     font-style: normal;
 }
@@ -27,12 +27,12 @@ body {
 }
 
 p, ul, input, li{
-    font: 20px bitOperator;
+    font: 20px magicPixel;
     line-height: 1.1;
 }
 
 h2 {
-    font: 32px bitOperatorBold;
+    font: 32px magicPixelBold;
 }
 
 ul.spaced > li {
