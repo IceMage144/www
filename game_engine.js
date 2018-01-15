@@ -9,6 +9,7 @@ const Pr = "rgb(238, 232, 170)"   // Pale Golden rod
 const Lg = "rgb(50,  205, 50 )"   // Lime green
 const Ag = "rgb(100, 240, 110)"   // Apple green
 const Pg = "rgb(152, 251, 152)"   // Pale Green
+const Lb = "rgb(100, 100, 255)"   // Light blue
 const Mb = "rgb(0,   0,   205)"   // Middle blue
 const Db = "rgb(30,  144, 255)"   // Dodger blue
 const Pt = "rgb(175, 238, 238)"   // Pale Turquoise

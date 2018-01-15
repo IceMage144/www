@@ -164,13 +164,13 @@ class Wall {
 var IH = new Canvas("gamediv", rheight, rwidth, true)
 
 var scene = new THREE.Scene()
-scene.background = new THREE.Color(Wh)
+scene.background = new THREE.Color(Lb)
 
 var renderer = new THREE.WebGLRenderer()
 renderer.setSize(512, 512)
 var div = document.getElementById("gamediv")
 div.appendChild( renderer.domElement )
-renderer.domElement.setAttribute("id", "view")
+renderer.domElement.setAttribute("id", "game")
 
 var light = new THREE.PointLight(0xffffff, 1, 100)
 light.position.z = radius
