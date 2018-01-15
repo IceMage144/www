@@ -26,7 +26,7 @@ body {
     flex-direction: column;
 }
 
-p, ul, input, li{
+p, ul, input, li, a{
     font: 20px magicPixel;
     line-height: 1.1;
 }
@@ -99,6 +99,21 @@ a:hover {
     height: 250px;
     background: #000000 url('assets/prism.jpg') center repeat;
     background-size: 100%;
+}
+
+#livrejam {
+  height: auto;
+  width: 500px;
+}
+
+#hackathon {
+  height: auto;
+  width: 500px;
+}
+
+#ludumdare {
+  height: auto;
+  width: 500px;
 }
 
 ul.navbar {
