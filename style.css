@@ -92,6 +92,58 @@ a:hover {
     height: auto;
 }
 
+#livrejam {
+  height: auto;
+  width: 500px;
+}
+
+#hackathon {
+  height: auto;
+  width: 500px;
+}
+
+#ludumdare {
+  height: auto;
+  width: 500px;
+}
+
+#perfil {
+  height: auto;
+  width: 300px;
+}
+
+.column {
+  float: left;
+  width: 50%;
+}
+
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+@media (max-width: 1000px) {
+    .column {
+        width: 100%;
+    }
+
+    #livrejam {
+      height: auto;
+      width: 100%;
+    }
+
+    #hackathon {
+      height: auto;
+      width: 100%;
+    }
+
+    #ludumdare {
+      height: auto;
+      width: 100%;
+    }
+}
+
 .inputBorder {
     display: inline-block;
     border: 2px solid #888888;
@@ -114,21 +166,6 @@ a:hover {
     height: 250px;
     background: #000000 url('assets/prism.jpg') center repeat;
     background-size: 100%;
-}
-
-#livrejam {
-  height: auto;
-  width: 500px;
-}
-
-#hackathon {
-  height: auto;
-  width: 500px;
-}
-
-#ludumdare {
-  height: auto;
-  width: 500px;
 }
 
 ul.navbar {
