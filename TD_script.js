@@ -483,7 +483,7 @@ var UI = {
         })
         this.shopButtonLables = newArray(7, (i) => {
             return new Text(this.shopButtons[i].x + 2,
-                            this.shopButtons[i].y + 11*pixelSize/8 + 1,
+                            this.shopButtons[i].y + 11*pixelSize/8 + 5,
                             "" + TOWERINFOS[i].cost[0],
                             Wh,
                             "30px magicPixel",
@@ -493,38 +493,38 @@ var UI = {
             this.tower.upgrade()
         })
         this.upgradeOff = new Sprite("assets/icons/upgrade-off.png", 20*pixelSize + 2, 13*pixelSize - 4)
-        this.upgradeLabel = new Text(this.upgradeOn.x + 2, this.upgradeOn.y + 11/8*pixelSize + 1, () => {
+        this.upgradeLabel = new Text(this.upgradeOn.x + 2, this.upgradeOn.y + 11/8*pixelSize + 5, () => {
             return (UI.tower.canUpgrade()? "" + TOWERINFOS[UI.tower.type].cost[UI.tower.level] : "")
         }, Wh, "30px magicPixel", [0.4, 0.4])
         this.sell = new Button("assets/icons/cash.png", 19*pixelSize - 2, 13*pixelSize - 4, () => {
             this.tower.sell()
         })
-        this.sellLabel = new Text(this.sell.x + 2, this.sell.y + 11/8*pixelSize + 1, () => {
+        this.sellLabel = new Text(this.sell.x + 2, this.sell.y + 11/8*pixelSize + 5, () => {
             return "" + UI.tower.accMoney*0.7
         }, Wh, "30px magicPixel", [0.4, 0.4])
         this.selTower = false
         this.tower = false
         this.selTowerSprite = new Sprite("")
         this.selTowerRank = new Sprite("")
-        this.fireSpeedText = new Text(18.5*pixelSize, 11.25*pixelSize - 2, () => {
+        this.fireSpeedText = new Text(18.5*pixelSize, 11.25*pixelSize + 2, () => {
             return "Fire Speed: " + UI.tower.timer
         }, Wh, "30px magicPixel", [0.4, 0.4])
-        this.rangeText = new Text(18.5*pixelSize, 11.75*pixelSize - 2, () => {
+        this.rangeText = new Text(18.5*pixelSize, 11.75*pixelSize + 2, () => {
             return "Range:    " + UI.tower.range
         }, Wh, "30px magicPixel", [0.4, 0.4])
-        this.damageText = new Text(18.5*pixelSize, 12.25*pixelSize - 2, () => {
+        this.damageText = new Text(18.5*pixelSize, 12.25*pixelSize + 2, () => {
             return "Damage:   " + UI.tower.damage
         }, Wh, "30px magicPixel", [0.4, 0.4])
         this.money = 2000
-        this.moneyText = new Text(19.5*pixelSize, 2.9*pixelSize - 3, () => {
+        this.moneyText = new Text(19.5*pixelSize, 2.9*pixelSize + 1, () => {
             return "" + this.money
         }, Wh, "30px magicPixel", [0.5, 0.5])
         this.lives = 100
-        this.livesText = new Text(19.5*pixelSize, 2*pixelSize - 2, () => {
+        this.livesText = new Text(19.5*pixelSize, 2*pixelSize + 2, () => {
             return "" + this.lives
         }, Wh, "30px magicPixel", [0.5, 0.5])
         this.wave = 1
-        this.waveText = new Text(19.5*pixelSize, 1.1*pixelSize - 1, () => {
+        this.waveText = new Text(19.5*pixelSize, 1.1*pixelSize + 3, () => {
             return "" + this.wave
         }, Wh, "30px magicPixel", [0.5, 0.5])
         this.pauseWaveButton = new Button("assets/Bronze_UI/pauseWave.png", 19*pixelSize + 2, 15*pixelSize - 7, () => {

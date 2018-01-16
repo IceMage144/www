@@ -26,13 +26,17 @@ body {
     flex-direction: column;
 }
 
-p, ul, input, li, a{
+p, ul, input, li{
     font: 20px magicPixel;
     line-height: 1.1;
 }
 
 h2 {
     font: 32px magicPixelBold;
+}
+
+h3 {
+    font: 25px magicPixelBold;
 }
 
 ul.spaced > li {
@@ -59,9 +63,20 @@ a:hover {
 }
 
 .paper {
-    flex: 1;
     margin: 20px 100px 20px 100px;
     background-color: #FFFFFF;
+}
+
+.entry {
+    margin: 20px;
+    padding: 50px 50px 30px 50px;
+    background-color: #b5b0ed;
+}
+
+.description {
+    margin: 20px;
+    padding: 20px 50px 30px 50px;
+    background-color: #b5b0ed;
 }
 
 #formInput {
@@ -137,7 +152,7 @@ ul.navbar li a {
 }
 
 li.active {
-    background-color: #3b7fed
+    background-color: #3B7FED
 }
 
 ul.navbar li:not(.active) a:hover {
