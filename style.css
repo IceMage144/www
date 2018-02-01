@@ -87,6 +87,14 @@ a:hover {
     border: 2px solid #333333;
 }
 
+#julia {
+    border: 2px solid #333333;
+}
+
+#mand {
+    border: 2px solid #333333;
+}
+
 #tesseract {
     width: 500px;
     height: auto;

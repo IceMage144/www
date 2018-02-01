@@ -9,8 +9,10 @@ const Pr = "rgb(238, 232, 170)"   // Pale Golden rod
 const Lg = "rgb(50,  205, 50 )"   // Lime green
 const Ag = "rgb(100, 240, 110)"   // Apple green
 const Pg = "rgb(152, 251, 152)"   // Pale Green
+const Gr = "rgb(0,   255, 255)"   // Green
 const Lb = "rgb(100, 100, 255)"   // Light blue
 const Mb = "rgb(0,   0,   205)"   // Middle blue
+const Bu = "rgb(0,   0,   255)"   // Blue
 const Db = "rgb(30,  144, 255)"   // Dodger blue
 const Pt = "rgb(175, 238, 238)"   // Pale Turquoise
 const Do = "rgb(153, 50,  204)"   // Dark orchid
@@ -234,21 +236,24 @@ class Canvas {
         this.keyPressFuncs = {};
         this.keyUpFuncs = {};
         this.keyDownFuncs = {};
-        this.clickFuncs = {}
+        this.clickFuncs = {};
+        this.mouseMoveFuncs = {};
         var bindClick = (function(e) { this.click(); }).bind(this);
         var bindKeyDown = (function(e) {
-            e.preventDefault();
+            //e.preventDefault();
             if (e.keyCode in this.keysDown)
                 this.keysDown[e.keyCode] = true;
         }).bind(this);
         var bindKeyUp = (function(e) {
-            e.preventDefault();
+            //e.preventDefault();
             if (e.keyCode in this.keysDown)
                 this.keysDown[e.keyCode] = false;
         }).bind(this);
         var bindMouseMove = (function(e) {
             let rect = this.canvas.getBoundingClientRect();
             this.mousePos = [e.clientX - rect.left, e.clientY - rect.top];
+            for (var i in this.mouseMoveFuncs)
+                this.mouseMoveFuncs[i]();
         }).bind(this);
         addEventListener("keydown", bindKeyDown, false);
         addEventListener("keyup", bindKeyUp, false);
@@ -290,7 +295,7 @@ class Canvas {
     }
     add(e, name, layer=0) {
         if (layer >= this.numLayers || layer < 0)
-            throw new RangeError("Layer " + layer + " doesn't exists")
+            throw new RangeError("Layer " + layer + " doesn't exist")
         this.layers[layer].objs[name] = e;
         this.layers[layer].sortedKeys.push(name)
         e.start();
@@ -389,7 +394,10 @@ class Canvas {
                 break;
         }
     }
-    bindClick(key, func) {
-        this.clickFuncs[key] = func
+    bindClick(name, func) {
+        this.clickFuncs[name] = func;
+    }
+    bindMove(name, func) {
+        this.mouseMoveFuncs[name] = func;
     }
 }

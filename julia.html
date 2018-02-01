@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="UTF-8"></meta>
-	<title>Monster Invasion</title>
+	<title>Julia set</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
@@ -22,7 +22,7 @@
 					<li><a href="maze.html">3D Maze</a></li>
 					<li><a href="tower_deffense.html">Monster invasion</a></li>
 					<li><a href="julia.html">Julia set</a></li>
-			  </ul>
+		    </ul>
 			</li>
 			<li>
 				<a href="projects.html">Projects</a>
@@ -45,23 +45,51 @@
 			<center>
 				<p>&nbsp;</p>
 				<div id="gamediv">
-		      <canvas id="game"></canvas>
+					<div class="row">
+						<div class="column">
+							<h2>Julia</h2>
+			      	<canvas id="julia"></canvas>
+						</div>
+						<div class="column">
+							<h2>Mandelbrot</h2>
+							<canvas id="mand"></canvas>
+						</div>
+					</div>
+					<p>Real part:</p>
+					<div class="inputBorder">
+						<input type="text" id="real"/>
+					</div>
+					<p>Imaginary part:</p>
+					<div class="inputBorder">
+						<input type="text" id="imaginary"/>
+					</div>
+					<p></p>
+					<p id="res">Resolution: 200</p>
+					<input type="submit" id="sub" value="Submit" onClick="sub()"/>
+					<input type="submit" value="+" onClick="increaseResol()"/><input type="submit" value="-" onClick="decreaseResol()"/>
+					<script>
+						var a = function(e) {
+							if (e.keyCode == 13)
+								document.getElementById('sub').click();
+						}
+						document.getElementById('real').onkeypress = a
+						document.getElementById('imaginary').onkeypress = a
+					</script>
 					<script type="text/javascript" src="game_engine.js"></script>
-		      <script type="text/javascript" src="TD_script.js"></script>
+		      <script type="text/javascript" src="julia_script.js"></script>
 				</div>
 				<p>&nbsp;</p>
 				<p>-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-</p>
 				<div class="description">
-					<h2>How to play</h2>
+					<h2>How to use</h2>
 					<table>
 						<tbody>
 							<tr>
 								<td>
 									<ul>
-										<li>Mouse: Everything</li>
-										<li>Buy towers from the shop and build them in a nice place</li>
-										<li>Click on towers to inspect and upgrade</li>
-										<li>Defeat huge waves of monsters with your military weapons!!</li>
+										<li>Enter an imaginary number at the fields to see the corresponding Julia set on the left canvas</li>
+										<li>You can hold the Z key and point with the mouse to the Mandelbrot set (on the right canvas), so you can see the Julia set of that point on the left canvas</li>
+										<li>You can increase or decrease the resolution using the "+" and "-" buttons</li>
 									</ul>
 								</td>
 							</tr>
@@ -70,7 +98,7 @@
 				</div>
 				<p>&nbsp;</p>
 			</center>
-		</div>
+	  </div>
 	</div>
 	<footer id="footer">
 		<table class="footer">
