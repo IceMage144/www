@@ -240,14 +240,16 @@ class Canvas {
         this.mouseMoveFuncs = {};
         var bindClick = (function(e) { this.click(); }).bind(this);
         var bindKeyDown = (function(e) {
-            //e.preventDefault();
-            if (e.keyCode in this.keysDown)
+            if (e.keyCode in this.keysDown) {
+                e.preventDefault();
                 this.keysDown[e.keyCode] = true;
+            }
         }).bind(this);
         var bindKeyUp = (function(e) {
-            //e.preventDefault();
-            if (e.keyCode in this.keysDown)
+            if (e.keyCode in this.keysDown) {
+                e.preventDefault();
                 this.keysDown[e.keyCode] = false;
+            }
         }).bind(this);
         var bindMouseMove = (function(e) {
             let rect = this.canvas.getBoundingClientRect();

@@ -95,13 +95,13 @@ function move(x, y) {
     }
     document.getElementById("real").value = Math.round(10000*wptrx)/10000
     document.getElementById("imaginary").value = Math.round(10000*wptry)/10000
-    C1.draw()
 }
 
 function sub() {
     var real = document.getElementById("real").value;
     var imag = document.getElementById("imaginary").value;
     move(Number(real), Number(imag))
+    C1.draw()
 }
 
 function increaseResol() {
@@ -135,18 +135,22 @@ function decreaseResol() {
 }
 
 function main() {
+    C2.setInputInterval(10)
     C1.add(Julia, "BG")
     C2.add(Mand, "BG")
-    C2.setInputInterval(10)
     C2.bind(90, () => {
         C2.bindMove("move", () => { move(2.5*C2.mousePos[0]/rwidth - 2, 2.5*C2.mousePos[1]/rheight - 1.25) })
         document.getElementById("real").disabled = true
         document.getElementById("imaginary").disabled = true
+        C1.setDrawInterval(100)
+        C2.setDrawInterval(100)
     }, KEY_DOWN)
     C2.bind(90, () => {
         C2.bindMove("move", () => { })
         document.getElementById("real").disabled = false
         document.getElementById("imaginary").disabled = false
+        C1.stopDraw()
+        C2.stopDraw()
     }, KEY_UP)
     move(0, 0)
 }
