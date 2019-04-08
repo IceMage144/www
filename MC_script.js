@@ -21,6 +21,7 @@ class City {
         if (!this.destroyed)
             this.sprite.draw(ctx);
     }
+    update(dt) {}
 }
 
 class Missile {
@@ -75,10 +76,12 @@ class Missile {
             MCount++;
         }
     }
-    draw(ctx) {
-        let pos = this.getPos();
+    update(dt) {
         this.move();
         this.trySplit();
+    }
+    draw(ctx) {
+        let pos = this.getPos();
         ctx.beginPath();
         ctx.moveTo(this.sx, this.sy);
         ctx.lineTo(pos[0], pos[1]);
@@ -107,6 +110,7 @@ class Base {
         for (let i = 0; i < 5; i++)
             this.ammo.push(new Sprite("assets/Missile.png", x + 8*i + 12, y + 12));
     }
+    update(dt) {}
     draw(ctx) {
         this.dome.draw(ctx);
         for (let i = 0; i < this.ammo.length; i++)
@@ -135,22 +139,26 @@ class Explosion {
         this.grow = 2;
     }
     start() {}
-    draw(ctx) {
+    update(dt) {
         this.rad += this.grow;
         if (this.rad >= 32)
             this.grow = -2;
         if (this.rad <= 0 && this.grow < 0)
             Game.del(this.name);
         this.destroyMissiles();
+    }
+    draw(ctx) {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.rad, 0, 2 * Math.PI, false);
         ctx.fillStyle = Gd;
         ctx.fill();
     }
     destroyMissiles() {
-        for (let k in Game.objs) {
+        // TODO: Don't use Game.layers anymore
+        for (let k in Game.layers[0].objs) {
             if (k.indexOf("_EMi") == 0) {
-                let pos = Game.objs[k].getPos();
+                // TODO: Don't use Game.layers anymore
+                let pos = Game.layers[0].objs[k].getPos();
                 let dist = sq(this.x - pos[0]) + sq(this.y - pos[1]);
                 if (dist <= sq(this.rad)) {
                     Game.del(k);
@@ -189,6 +197,7 @@ var Field = {
         for (let i = 0; i < this.cities.length; i++)
             this.cities[i].draw(ctx);
     },
+    update(dt) {},
     checkGameOver() {
         return (this.getAliveCities() == 0);
     },
@@ -225,10 +234,6 @@ var Field = {
             return null;
         let r = Math.floor(Math.random()*6);
         var city = this.cities[r];
-        //while (city.destroyed) {
-        //    r = Math.floor(Math.random()*6);
-        //    city = this.cities[r];
-        //}
         return city;
     },
     getTotalAmmo() {
@@ -256,11 +261,13 @@ var Cursor = {
         this.next = [0, 0];
         this.sprite = new Rectangle(this.x - 2, this.y - 2, 4, 4, Wh);
     },
-    draw(ctx) {
+    update(dt) {
         this.x = Math.min(rwidth, Math.max(0, this.x + 8*this.next[0]));
         this.y = Math.min(rheight, Math.max(0, this.y + 8*this.next[1]));
         this.sprite.x = this.x - 2;
         this.sprite.y = this.y - 2;
+    },
+    draw(ctx) {
         this.sprite.draw(ctx);
     },
     shoot() {
@@ -279,7 +286,8 @@ var Planes = {
         this.interval = 0;
         this.missiles = 10;
     },
-    draw(ctx) {
+    draw(ctx) {},
+    update(dt) {
         if (this.missiles == 0) return;
         if (this.counter == this.interval) {
             let sx = Math.floor(Math.random()*rwidth);
@@ -306,9 +314,11 @@ var LevelManager = {
         this.level = 1;
         this.money = 0;
     },
-    draw(ctx) {
+    draw(ctx) {},
+    update(dt) {
         if (this.enemyMissiles() == 0 && Planes.missiles == 0 && Field.getAliveCities() != 0) {
-            for (let k in Game.objs) {
+            // TODO: Don't use Game.layers anymore
+            for (let k in Game.layers[0].objs) {
                 if (k.indexOf("_FMi") == 0)
                     Game.del(k);
             }
@@ -321,7 +331,8 @@ var LevelManager = {
     },
     enemyMissiles() {
         let count = 0;
-        for (let k in Game.objs) {
+        // TODO: Don't use Game.layers anymore
+        for (let k in Game.layers[0].objs) {
             if (k.indexOf("_EMi") == 0)
                 count++;
         }
@@ -355,21 +366,23 @@ function startGame() {
     MCount = 0;
     Game.reset();
     Game.setDrawInterval(50);
+    Game.setUpdateInterval(50);
+    Game.addLayer(2);
     Game.ingame = true;
     // Game adds
     Game.add(Background, "Background");
     Game.add(LevelManager, "LM");
     Game.add(Field, "Field");
-    Game.add(Cursor, "Cursor");
+    Game.add(Cursor, "Cursor", 1);
     Game.add(Planes, "Planes");
-    Game.add(Score, "Score");
-    Game.add(Level, "Level");
-    Game.add(Money, "Money");
+    Game.add(Score, "Score", 1);
+    Game.add(Level, "Level", 1);
+    Game.add(Money, "Money", 1);
 }
 
 function gameover() {
-    Game.add(Dim, "Dim");
-    Game.add(Restart, "B_Restart");
+    Game.add(Dim, "Dim", 2);
+    Game.add(Restart, "B_Restart", 2);
     Game.draw();
     Game.stopDraw();
     Game.ingame = false;
@@ -377,15 +390,17 @@ function gameover() {
 
 function pause() {
     if (!Game.paused) {
-        Game.add(Dim, "Dim");
-        Game.add(Paused, "Paused");
+        Game.add(Dim, "Dim", 2);
+        Game.add(Paused, "Paused", 2);
         Game.stopDraw();
+        Game.stopUpdate();
         Game.paused = true;
     }
     else {
-        Game.del("Dim");
-        Game.del("Paused");
+        Game.del("Dim", 2);
+        Game.del("Paused", 2);
         Game.setDrawInterval(50);
+        Game.setUpdateInterval(50);
         Game.paused = false;
     }
 }
@@ -412,7 +427,7 @@ function main() {
     Game.bind(90, function() { if (Game.ingame && !Game.pause) Cursor.shoot(); }, KEY_DOWN);
     showMenu();
     Game.bind(83, function() { Game.stop(); }, KEY_DOWN);
-    Game.bind(75 , function() { for (let k in Game.objs) console.log(k); console.log("=======")}, KEY_DOWN);
+    Game.bind(75 , function() { for (let l = 0; l < Game.numLayers; l++) for (let k in Game.layers[l].objs) console.log(k); console.log("=======")}, KEY_DOWN);
 }
 
 window.onload = main;

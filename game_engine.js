@@ -214,6 +214,8 @@ class Canvas {
     |  39 => right
     |  40 => down
     */
+    // TODO: Pass a config table to constructor to tell it how many layers
+    // we need and tell about update, draw and input intervals (and maybe keys too)
     constructor(id, width, height, onlyInput=false) {
         this.canvas = document.getElementById(id);
         this.canvas.width = width;
