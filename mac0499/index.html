@@ -13,7 +13,7 @@
 				<a href="index.html">TCC</a>
 			</li>
 			<li class="left">
-				<a href="">Proposta</a>
+				<a href="proposta.pdf">Proposta</a>
 			</li>
 			<li>
 				<a href="">Pôster</a>
@@ -28,12 +28,33 @@
 	</header>
 	<div class="paper">
 		<div class="content">
-			<p>&nbsp;</p>
 			<center>
-				<h2>MAC0499 - Trabalho de formatura supervisionado</h2>
+				<h2>Utilização de aprendizagem por reforço em jogos PvE</h2>
 				<h4>Aluno: João Gabriel Basi</h4>
 				<h4>Supervisor: Prof. Roberto Hirata</h4>
 			</center>
+			<p>&nbsp;</p>
+			<p>
+				Este trabalho tem como principal objetivo a criação um agente adversário, para um jogo PvE,
+				que se adapte ao estilo de jogo e à maestria do jogador por meio de aprendizagem por reforço.
+				O desenvolvimento focará na possível integração desse agente em um jogo, para isso, a execução
+				do agente deve impactar o mínimo possível na experiência do jogador, além de não utilizar
+				informações externas ao jogo.
+			</p>
+			<p>
+				Como objetivo secundário, deseja-se criar o algoritmo de modo que, se houver vários agentes
+				com essa mesma arquitetura em uma fase, eles consigam cooperar entre si para derrotar o jogador,
+				ou seja, eles devem considerar as ações uns dos outros quando forem julgar as ações futuras.
+			</p>
+			<p>
+				Para criar e testar as arquiteturas dos agentes pretende-se utilizar o ambiente DeepMind Lab,
+				que conta com uma versão modificada do jogo "Quake III", e com uma interface Python,
+				que permite a personalização dos atributos do jogo e a criação de agentes personalizados.
+			</p>
+			<p>
+				A proposta completa pode ser encontrada <a href="proposta.pdf">aqui</a>
+			</p>
+
 			<!-- <p>
 				O principal objetivo deste trabalho é criar uma IA para jogos eletrônicos de combate PvE que consegue aprender a
 				competir contra o jogador.
@@ -45,43 +66,16 @@
 				médio nível. Com o objetivo de mudar esse cenário, este trabalho visa criar uma IA que consiga competir
 				com esse grupo grande de jogadores, sem passar a impressão de que o bot seja invencível.
 			</p> -->
-			<p>
-				No desenvolvimento de jogos PvE, há uma preocupação grande com a criação dos bots, que compõem a maior
-				parte da experiência do jogo. Para que o jogo se torne interessante é necessário que os bots ofereçam
-				desafios emocionantes para o jogador, ou seja, enfrentá-los não pode ser nem muito fácil, nem muito
-				difícil, e é necessário que o jogo tenha uma progressão coesa, ou seja, a dificuldade entre
-				fases consecutivas não pode ser muito distoante.
-			</p>
 			<!-- <p>
 				Problemas recorrentes no desenvolvimento de jogos PvE são a criação de bots que ofereçam desafios
 				emocionantes ao jogador e que a dificuldade dos bots de uma fase para a outra não seja muito destoante. Com
 				o intuito de facilitar a criação desse tipo de bot, planejo desenvolver uma IA que aprenda com o jogador
 				por meio de técnicas de aprendizagem de máquina.
 			</p> -->
-			<p>
-				Com o intuito de facilitar a criação desse tipo de jogo, pretendo explorar o uso de aprendizagem de
-				máquina na criação dos bots. A técnica permite o desenvolvimento de IAs personalizadas que se adaptam
-				aos pontos fortes e fracos de cada jogador, fazendo com que o jogo se adapte à maestria do jogador,
-				tornando assim a experiência de jogo emocionante para todos. Permite também que a IA fique mais
-				"inteligente" a cada contato com o jogador, fazendo com que a dificuldade aumente suavemente a
-				cada fase jogada.
-			</p>
-			<p>
-				O desenvolvimento deverá girar em torno da experiência do jogador e da integrabilidade da IA em um jogo.
-				Levando isso em conta, é desejável que o treinamento da IA impacte o mínimo possível na experiência do
-				jogador, que a movimentação e o tempo de reação sejam o mais naturais possível e que ela seja de fácil
-				integração em um jogo em desenvolvimento.
-			</p>
-			<p>
-				Como objetivo secundário, desejo criar a IA de modo que, se houver vários bots com essa mesma arquitetura,
-				eles consigam cooperar entre si para derrotar o jogador, ou seja, eles devem considerar as
-				movimentações uns dos outros quando forem julgar as ações futuras. Com isso feito, devo conseguir
-				fazer também com que bots aliados cooperem com o jogador.
-			</p>
-			<p>
+			<!-- <p>
 				Esse tipo de arquitetura pode beneficiar também jogos PvP onde é possível jogar contra bots,
 				como é o caso de DotA 2.
-			</p>
+			</p> -->
 			<!-- <p>
 				Jogos PvE open source são difíceis de achar,
 				por isso, em primeira instância, decidi simular um ambiente PvE usando a framework para aprendizagem de
@@ -103,7 +97,35 @@
 				conseguir cooperar entre si, ou seja, devem considerar os movimentos umas das outras quando forem julgar
 				as ações futuras.
 			</p> -->
-			<p>&nbsp;</p>
+
+
+			<!-- <p>
+				No desenvolvimento de jogos PvE, há uma preocupação grande com a criação de IAs para os inimigos, que
+				compõem a maior parte da experiência do jogo. Para que o jogo se torne interessante é necessário que
+				os bots ofereçam desafios emocionantes para o jogador, ou seja, enfrentá-los não pode ser nem muito
+				fácil, nem muito difícil, e é necessário que o jogo tenha uma progressão coesa e monotônica, ou seja,
+				a dificuldade entre fases consecutivas não pode ser muito distoante e deve ser não decrescente.
+			</p>
+			<p>
+				Com o intuito de facilitar a criação desse tipo de jogo, este trabalho pretende explorar o uso de
+				aprendizagem de máquina na criação dos bots. A técnica permite o desenvolvimento de IAs personalizadas
+				que se adaptam aos pontos fortes e fracos de cada jogador, fazendo com que o jogo se adapte à
+				maestria do jogador, tornando assim a experiência de jogo emocionante para todos. Permite também
+				que a IA fique mais "inteligente" a cada contato com o jogador, fazendo com que a dificuldade
+				aumente suavemente a cada fase jogada.
+			</p>
+			<p>
+				O desenvolvimento deverá girar em torno da experiência do jogador e da integrabilidade da IA em um jogo.
+				Levando isso em conta, é desejável que o treinamento da IA impacte o mínimo possível na experiência do
+				jogador, que a movimentação e o tempo de reação sejam o mais naturais possível e que ela seja de fácil
+				integração em um jogo em desenvolvimento.
+			</p>
+			<p>
+				Como objetivo secundário, deseja-se criar a IA de modo que, se houver vários bots com essa mesma
+				arquitetura, eles consigam cooperar entre si para derrotar o jogador, ou seja, eles devem considerar
+				as movimentações uns dos outros quando forem julgar as ações futuras. Com isso feito, deve-se conseguir
+				fazer também com que bots aliados cooperem com o jogador.
+			</p> -->
 		</div>
 	</div>
 	<footer id="footer">
