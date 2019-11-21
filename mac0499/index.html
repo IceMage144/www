@@ -2,8 +2,9 @@
 <html>
 <head>
 	<meta charset="UTF-8"></meta>
-	<title>TCC</title>
+	<title>MAC0499 - Trabalho de Formatura Supervisionado</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script type="text/javascript" src="to_executable.js"></script>
 </head>
 <body>
 	<header>
@@ -21,6 +22,9 @@
 			<li>
 				<a href="">Monografia</a>
 			</li>
+			<li>
+				<a href="http://www.linux.ime.usp.br/~joaogabriel/builds" onclick="goToExecutable(); return false;">Executável</a>
+			</li>
 			<li class="right">
 				<a href="http://www.linux.ime.usp.br/~joaogabriel">Site principal</a>
 			</li>
@@ -29,102 +33,46 @@
 	<div class="paper">
 		<div class="content">
 			<center>
-				<h2>Utilização de aprendizagem por reforço em jogos PvE</h2>
+				<h2>Criação de um jogo com dificuldade dinâmica e aprendizagem por reforço</h2>
 				<h4>Aluno: João Gabriel Basi</h4>
-				<h4>Supervisor: Prof. Roberto Hirata</h4>
+				<h4>Supervisor: Prof. Dr. Roberto Hirata Jr.</h4>
 			</center>
-			<p>&nbsp;</p>
+			<h3>Introdução</h3>
 			<p>
-				Este trabalho tem como principal objetivo a criação um agente adversário, para um jogo PvE,
-				que se adapte ao estilo de jogo e à maestria do jogador por meio de aprendizagem por reforço.
-				O desenvolvimento focará na possível integração desse agente em um jogo, para isso, a execução
-				do agente deve impactar o mínimo possível na experiência do jogador, além de não utilizar
-				informações externas ao jogo.
+				Jogos no estilo <i>player versus environment</i> (PvE), em contraste com jogos no estilo <i>player versus player</i> (PvP), são jogos onde o jogador combate vários inimigos controlados por inteligências artificiais para cumprir os objetivos do jogo. Nesse estilo, é comum que os desenvolvedores modelem os inimigos como sendo agentes autônomos, pelo fato deles tomarem decisões sem a intervenção humana. 
 			</p>
 			<p>
-				Como objetivo secundário, deseja-se criar o algoritmo de modo que, se houver vários agentes
-				com essa mesma arquitetura em uma fase, eles consigam cooperar entre si para derrotar o jogador,
-				ou seja, eles devem considerar as ações uns dos outros quando forem julgar as ações futuras.
+				A criação e o balanceamento dos agentes ocupa boa parte do desenvolvimento de jogos PvE, já que boa parte da experiência de jogo é proporcionada por eles. Para que o jogo se torne interessante, é desejável que os agentes ofereçam desafios fáceis o suficiente para que o jogador não fique frustrado, e difíceis o suficiente para que ele não fique entediado, e também que haja desafios novos a cada fase.
+			</p>
+			<h3>Motivação</h3>
+			<p>
+				O desenvolvimento desses agentes pode ser uma tarefa difícil e trabalhosa se métodos tradicionais forem utilizados. É necessário considerar todas as situações de jogo possíveis e sintetizá-las em um algoritmo complexo. Como consequência muitas vezes, ou a dificuldade de jogo fica acima ou abaixo do esperado, ou o algoritmo acaba tomando decisões que não foram previstas na fase de desenvolvimento, fazendo com que o jogador perca a imersão no mundo do jogo.
 			</p>
 			<p>
-				Para criar e testar as arquiteturas dos agentes pretende-se utilizar o ambiente DeepMind Lab,
-				que conta com uma versão modificada do jogo "Quake III", e com uma interface Python,
-				que permite a personalização dos atributos do jogo e a criação de agentes personalizados.
+				Alguns autores citados no trabalho mostram através de experimentos com usuários que jogos com dificuldade dinâmica são agradáveis ao jogador, porém é muito difícil encontrar jogos no mercado que de fato utilizam tais algoritmos de adaptação.
+			</p>
+			<h3>Objetivos</h3>
+			<p>
+				Este trabalho tem como objetivo a criação de um protótipo de jogo PvE para computador que saiba adaptar sua dificuldade de acordo com a progressão e maestria do jogador, além de um sistema que facilite a criação de IAs para o jogo. Para isso o jogo contará com um sistema que identifica a proficiência do jogador e com agentes adversários que consigam aprender estratégias através de aprendizagem de máquina.
+			</p>
+			<p>
+				Como algoritmos de aprendizagem em geral requerem muito processamento, é necessário também adicionar a restrição que o processamento do jogo deve ocorrer rápido o suficiente para que a redução no número de quadros por segundo não seja perceptível, impactando minimamente a experiência do jogador.
+			</p>
+			<p>
+				Além disso, para que o jogo seja o mais simples e portátil possível ele não deve utilizar informações externas ao programa (como por exemplo os quadros da janela do jogo), dados de sensores físicos acoplados ao jogador ou ainda informações armazenadas na nuvem.
+			</p>
+
+			<!-- <p>
+				Este trabalho tem como principal objetivo a criação um agente adversário, para um jogo PvE, que se adapte ao estilo de jogo e à maestria do jogador por meio de aprendizagem por reforço. O desenvolvimento focará na possível integração desse agente em um jogo, para isso, a execução do agente deve impactar o mínimo possível na experiência do jogador, além de não utilizar informações externas ao jogo.
+			</p>
+			<p>
+				Como objetivo secundário, deseja-se criar o algoritmo de modo que, se houver vários agentes com essa mesma arquitetura em uma fase, eles consigam cooperar entre si para derrotar o jogador, ou seja, eles devem considerar as ações uns dos outros quando forem julgar as ações futuras.
+			</p>
+			<p>
+				Para criar e testar as arquiteturas dos agentes pretende-se utilizar o ambiente DeepMind Lab, que conta com uma versão modificada do jogo "Quake III", e com uma interface Python, que permite a personalização dos atributos do jogo e a criação de agentes personalizados.
 			</p>
 			<p>
 				A proposta completa pode ser encontrada <a href="proposta.pdf">aqui</a>
-			</p>
-
-			<!-- <p>
-				O principal objetivo deste trabalho é criar uma IA para jogos eletrônicos de combate PvE que consegue aprender a
-				competir contra o jogador.
-			</p>
-			<p>
-				Softwares populares dessa área, como AlphaStar (Starcraft) e OpenAI Five (DotA 2), focam em derrotar os
-				jogadores de alto nível em seus respectivos jogos. A experiência de enfrentar um bot de alto nível pode ser
-				divertida para jogadores profissionais, porém não é particularmente atrativa para jogadores de baixo e
-				médio nível. Com o objetivo de mudar esse cenário, este trabalho visa criar uma IA que consiga competir
-				com esse grupo grande de jogadores, sem passar a impressão de que o bot seja invencível.
-			</p> -->
-			<!-- <p>
-				Problemas recorrentes no desenvolvimento de jogos PvE são a criação de bots que ofereçam desafios
-				emocionantes ao jogador e que a dificuldade dos bots de uma fase para a outra não seja muito destoante. Com
-				o intuito de facilitar a criação desse tipo de bot, planejo desenvolver uma IA que aprenda com o jogador
-				por meio de técnicas de aprendizagem de máquina.
-			</p> -->
-			<!-- <p>
-				Esse tipo de arquitetura pode beneficiar também jogos PvP onde é possível jogar contra bots,
-				como é o caso de DotA 2.
-			</p> -->
-			<!-- <p>
-				Jogos PvE open source são difíceis de achar,
-				por isso, em primeira instância, decidi simular um ambiente PvE usando a framework para aprendizagem de
-				máquina Lab da Deepmind, que contém uma versão modificada do jogo PvP Quake III Arena. Vários trabalhos
-				utilizaram-na para realizar diversas tarefas.
-			</p> -->
-			<!-- <p>
-				É desejável que o treinamento da IA impacte o mínimo possível na experiência do jogador, que a movimentação
-				e o tempo de reação dela pareçam o mais próximos possível de um jogador real, e que ela possa ser integrada
-				facilmente no código fonte do jogo.
-			</p> -->
-			<!-- <p>
-				Na mesma linha desse projeto, foram criadas duas IAs famosas que utillizam aprendizagem de máquina, porém no
-				escopo de jogos PvP, a AlphaStar, que foi desenvolvida para Starcraft, e a OpenAI Five, para DotA 2.
-			</p> -->
-			<!-- <p>
-				A IA deverá conseguir aprender e contra-atacar a estratégia do jogador, oferecendo desafios para o mesmo,
-				mas sem parecer invencível. Em um cenário onde há várias IAs com essa mesma arquitetura, elas devem
-				conseguir cooperar entre si, ou seja, devem considerar os movimentos umas das outras quando forem julgar
-				as ações futuras.
-			</p> -->
-
-
-			<!-- <p>
-				No desenvolvimento de jogos PvE, há uma preocupação grande com a criação de IAs para os inimigos, que
-				compõem a maior parte da experiência do jogo. Para que o jogo se torne interessante é necessário que
-				os bots ofereçam desafios emocionantes para o jogador, ou seja, enfrentá-los não pode ser nem muito
-				fácil, nem muito difícil, e é necessário que o jogo tenha uma progressão coesa e monotônica, ou seja,
-				a dificuldade entre fases consecutivas não pode ser muito distoante e deve ser não decrescente.
-			</p>
-			<p>
-				Com o intuito de facilitar a criação desse tipo de jogo, este trabalho pretende explorar o uso de
-				aprendizagem de máquina na criação dos bots. A técnica permite o desenvolvimento de IAs personalizadas
-				que se adaptam aos pontos fortes e fracos de cada jogador, fazendo com que o jogo se adapte à
-				maestria do jogador, tornando assim a experiência de jogo emocionante para todos. Permite também
-				que a IA fique mais "inteligente" a cada contato com o jogador, fazendo com que a dificuldade
-				aumente suavemente a cada fase jogada.
-			</p>
-			<p>
-				O desenvolvimento deverá girar em torno da experiência do jogador e da integrabilidade da IA em um jogo.
-				Levando isso em conta, é desejável que o treinamento da IA impacte o mínimo possível na experiência do
-				jogador, que a movimentação e o tempo de reação sejam o mais naturais possível e que ela seja de fácil
-				integração em um jogo em desenvolvimento.
-			</p>
-			<p>
-				Como objetivo secundário, deseja-se criar a IA de modo que, se houver vários bots com essa mesma
-				arquitetura, eles consigam cooperar entre si para derrotar o jogador, ou seja, eles devem considerar
-				as movimentações uns dos outros quando forem julgar as ações futuras. Com isso feito, deve-se conseguir
-				fazer também com que bots aliados cooperem com o jogador.
 			</p> -->
 		</div>
 	</div>
