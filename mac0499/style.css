@@ -10,12 +10,7 @@ body {
     flex-direction: column;
 }
 
-ul, input, li {
-    font-size: 20px;
-    line-height: 1.1;
-}
-
-p {
+ul, li, p {
     font-size: 16px;
     line-height: 1.5;
 }
@@ -26,12 +21,12 @@ h2 {
 }
 
 h3 {
-    font-size: 26px;
+    font-size: 25px;
     margin: 50px 0 0 0;
 }
 
 h4 {
-    font-size: 22px;
+    font-size: 20px;
 }
 
 ul.spaced > li {
@@ -97,9 +92,27 @@ a:hover {
     background-color: #FFFFFF;
 }
 
-.inputBorder {
-    display: inline-block;
-    border: 2px solid #888888;
+.center {
+    text-align: center;
+}
+
+.screenshot {
+    width: 47%;
+    margin: 15px 1%;
+}
+
+.vertical-margin-content {
+    margin: 20px 0;
+}
+
+code {
+    background-color: #d1d1d8;
+    padding: 0 .3em;
+}
+
+kbd {
+    background-color: #dedee1;
+    padding: 0 .3em;
 }
 
 /* ======================= Header classes ======================= */
@@ -119,6 +132,10 @@ ul.navbar {
     background-color: #333333;
 }
 
+ul.navbar li {
+    font-size: 20px;
+}
+
 ul.navbar li.right {
     float: right;
 }
@@ -130,7 +147,7 @@ ul.navbar li:not(.right) {
 ul.navbar li a {
     display: block;
     color: white;
-    padding: 14px 16px;
+    padding: 14px 18px;
     text-align: center;
     text-decoration: none;
 }
